@@ -104,8 +104,17 @@ var BONDS=[
 ];
 var STARTUPS=[{name:'NeuroLink AI',stage:'Series B',raised:'$45M',yc:'W24',val:'$280M',logo:'🧠'},{name:'CarbonZero',stage:'Series A',raised:'$18M',yc:'S23',val:'$95M',logo:'🌱'},{name:'QuantumLeap',stage:'Seed',raised:'$5M',yc:'W25',val:'$32M',logo:'⚛️'},{name:'MediScan',stage:'Series A',raised:'$22M',yc:'S24',val:'$120M',logo:'🔬'},{name:'BlockSecure',stage:'Series B',raised:'$38M',yc:'W23',val:'$210M',logo:'🔗'},{name:'AgriDrone',stage:'Seed',raised:'$8M',yc:'S25',val:'$48M',logo:'🌾'}];
 var INSURANCE=[{name:'Whole Life',prov:'MetLife',prem:'$250/mo',cov:'$500K',type:'Life'},{name:'Term 20Y',prov:'Prudential',prem:'$85/mo',cov:'$1M',type:'Life'},{name:'Health Shield+',prov:'Aetna',prem:'$420/mo',cov:'Full',type:'Health'},{name:'Property Guard',prov:'State Farm',prem:'$180/mo',cov:'$350K',type:'Property'}];
-var VENDORS=[{name:'Vanguard',url:'https://vanguard.com',desc:'Index funds',icon:'📊'},{name:'Fidelity',url:'https://fidelity.com',desc:'Investing',icon:'💼'},{name:'Schwab',url:'https://schwab.com',desc:'Stocks',icon:'🏦'},{name:'Robinhood',url:'https://robinhood.com',desc:'Free trades',icon:'📈'},{name:'Coinbase',url:'https://coinbase.com',desc:'Crypto',icon:'₿'},{name:'Betterment',url:'https://betterment.com',desc:'Robo-advisor',icon:'🤖'}];
+
+// Partners split: investment platforms vs insurance providers
+var INVEST_VENDORS=[{name:'Vanguard',url:'https://vanguard.com',desc:'Index funds & ETFs',icon:'📊'},{name:'Fidelity',url:'https://fidelity.com',desc:'Full-service investing',icon:'💼'},{name:'Schwab',url:'https://schwab.com',desc:'Stocks & bonds',icon:'🏦'},{name:'Robinhood',url:'https://robinhood.com',desc:'Commission-free trades',icon:'📈'},{name:'Coinbase',url:'https://coinbase.com',desc:'Crypto exchange',icon:'₿'},{name:'Betterment',url:'https://betterment.com',desc:'Robo-advisor',icon:'🤖'}];
+var INSURANCE_VENDORS=[{name:'Lemonade',url:'https://lemonade.com',desc:'AI-powered insurance',icon:'🍋'},{name:'State Farm',url:'https://statefarm.com',desc:'Home & auto coverage',icon:'🏠'},{name:'Geico',url:'https://geico.com',desc:'Affordable auto insurance',icon:'🦎'},{name:'MetLife',url:'https://metlife.com',desc:'Life & health plans',icon:'🛡️'},{name:'Prudential',url:'https://prudential.com',desc:'Life insurance & annuities',icon:'🏛️'},{name:'Aetna',url:'https://aetna.com',desc:'Health insurance',icon:'💊'}];
+
 var INSIGHTS=[{title:'Dining up 23%',desc:'Meal prep could save ~$180/mo.',type:'warn',save:180},{title:'Sub overlap',desc:'Rotate streaming: save $26/mo.',type:'tip',save:26},{title:'Savings streak!',desc:'Emergency fund on track for April.',type:'good',save:0},{title:'Utilities down 12%',desc:'Smart thermostat working.',type:'good',save:35},{title:'Invest tip',desc:'$200/mo in VFIAX = ~$28K in 10y.',type:'tip',save:0}];
+
+// Helper to render a partners section
+function renderPartners(vendors, title){
+  return'<div style="margin-top:24px"><h2 style="font-size:15px;font-weight:700;margin-bottom:12px">'+title+'</h2><div class="grid gf" style="gap:9px">'+vendors.map(function(v){return'<a href="'+v.url+'" target="_blank" class="card" style="display:flex;align-items:center;gap:11px;padding:14px"><span style="font-size:24px">'+v.icon+'</span><div style="flex:1"><div style="font-size:12px;font-weight:600">'+v.name+'</div><div style="font-size:10px;color:var(--t3)">'+v.desc+'</div></div><span style="color:var(--t3)">↗</span></a>'}).join('')+'</div></div>';
+}
 
 // ==== RENDER: Nav, Landing, Auth, Sidebar (unchanged) ====
 function renderNav(){return'<nav style="position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 36px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,16,.75);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)"><div style="display:flex;align-items:center;gap:9"><div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:15px;font-weight:700;color:#fff">V</div><span style="font-size:18px;font-weight:700">VisionFi</span><span class="badge" style="background:var(--blue-g);color:var(--blue);font-size:9px">VISA</span></div><div style="display:flex;gap:7"><button class="btn btn-g" onclick="set({page:\'auth\',authMode:\'login\'})">Sign In</button><button class="btn btn-p" onclick="set({page:\'auth\',authMode:\'register\'})">Get Started</button></div></nav>'}
@@ -128,7 +137,7 @@ if(sub==='spending'){html+='<div style="border-radius:13px;background:var(--bg2)
 if(sub==='history'&&cr){html+='<div class="card" style="margin-bottom:16px"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Score Trend (7 months)</h3><canvas id="chart-credit" style="width:100%;height:240px"></canvas></div>';html+='<div class="grid g2"><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:12px">Factors Helping ✅</h3>'+[{f:'On-time payments',v:cr.on_time_pct+'%'},{f:'Credit age',v:cr.credit_age_years+' years'},{f:'Account mix',v:cr.total_accounts+' accounts'}].map(function(x){return'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:12px">'+x.f+'</span><span class="mono" style="font-size:12px;color:var(--green)">'+x.v+'</span></div>'}).join('')+'</div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:12px">Needs Work ⚠️</h3>'+[{f:'Utilization',v:cr.credit_utilization+'%',c:cr.credit_utilization>30?'var(--amber)':'var(--green)'},{f:'Hard inquiries',v:cr.hard_inquiries,c:cr.hard_inquiries>2?'var(--amber)':'var(--green)'},{f:'Derogatory marks',v:cr.derogatory_marks,c:cr.derogatory_marks>0?'var(--red)':'var(--green)'}].map(function(x){return'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:12px">'+x.f+'</span><span class="mono" style="font-size:12px;color:'+x.c+'">'+x.v+'</span></div>'}).join('')+'</div></div>';}
 return html+'</div>';}
 
-// ==== INVESTMENTS (EXPANDABLE INTERACTIVE CARDS) ====
+// ==== INVESTMENTS (EXPANDABLE INTERACTIVE CARDS + PARTNERS) ====
 function renderInvestments(){
   var u=state.currentUser,prem=u&&u.tier==='premium',sub=state.investSub;
   var tabs=[{id:'stocks',l:'Stocks',f:1},{id:'funds',l:'Funds',f:1},{id:'bonds',l:'Bonds',f:1},{id:'startups',l:'Startups',f:0},{id:'insurance',l:'Insurance',f:0}];
@@ -163,6 +172,8 @@ function renderInvestments(){
       h+='</div></div>';
       return h;
     }).join('')+'</div>';
+    // Partners for Stocks
+    html+=renderPartners(INVEST_VENDORS,'Partners — Stock Trading');
   }
 
   // ===== FUNDS =====
@@ -183,6 +194,8 @@ function renderInvestments(){
       html+='</div></td></tr>';
     });
     html+='</tbody></table></div>';
+    // Partners for Funds
+    html+=renderPartners(INVEST_VENDORS,'Partners — Mutual Funds & ETFs');
   }
 
   // ===== BONDS =====
@@ -207,16 +220,20 @@ function renderInvestments(){
       h+='</div></div>';
       return h;
     }).join('')+'</div>';
+    // Partners for Bonds
+    html+=renderPartners(INVEST_VENDORS,'Partners — Bond Trading');
   }
 
-  // Startups & Insurance (unchanged)
+  // Startups (unchanged)
   else if(sub==='startups')html+=prem?'<div class="grid gf">'+STARTUPS.map(function(s){return'<div class="card"><div style="display:flex;align-items:center;gap:9;margin-bottom:12px"><span style="font-size:22px">'+s.logo+'</span><div><div style="font-size:14px;font-weight:600">'+s.name+'</div><span class="badge" style="background:var(--amber-g);color:#fb8f24">YC '+s.yc+'</span></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">'+[{l:'Stage',v:s.stage},{l:'Raised',v:s.raised},{l:'Val',v:s.val}].map(function(d){return'<div><div style="font-size:8px;color:var(--t3);text-transform:uppercase">'+d.l+'</div><div style="font-size:12px;font-weight:600">'+d.v+'</div></div>'}).join('')+'</div></div>'}).join('')+'</div>':lock();
-  else html+=prem?'<div class="grid gf">'+INSURANCE.map(function(ins){return'<div class="card"><span class="badge" style="margin-bottom:8px;background:var(--purple-g);color:var(--purple)">'+ins.type+'</span><div style="font-size:14px;font-weight:600">'+ins.name+'</div><div style="font-size:11px;color:var(--t3);margin-bottom:12px">'+ins.prov+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><div><div style="font-size:8px;color:var(--t3)">Premium</div><div class="mono" style="font-size:12px;font-weight:600">'+ins.prem+'</div></div><div><div style="font-size:8px;color:var(--t3)">Coverage</div><div class="mono" style="font-size:12px;font-weight:600">'+ins.cov+'</div></div></div></div>'}).join('')+'</div>':lock();
+
+  // Insurance (with insurance-specific partners)
+  else html+=prem?'<div class="grid gf">'+INSURANCE.map(function(ins){return'<div class="card"><span class="badge" style="margin-bottom:8px;background:var(--purple-g);color:var(--purple)">'+ins.type+'</span><div style="font-size:14px;font-weight:600">'+ins.name+'</div><div style="font-size:11px;color:var(--t3);margin-bottom:12px">'+ins.prov+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><div><div style="font-size:8px;color:var(--t3)">Premium</div><div class="mono" style="font-size:12px;font-weight:600">'+ins.prem+'</div></div><div><div style="font-size:8px;color:var(--t3)">Coverage</div><div class="mono" style="font-size:12px;font-weight:600">'+ins.cov+'</div></div></div></div>'}).join('')+'</div>'+renderPartners(INSURANCE_VENDORS,'Partners — Insurance Providers'):lock();
   return html+'</div>';
 }
 
-// ==== INSIGHTS (unchanged) ====
-function renderInsights(){return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Insights</h1><div style="display:flex;flex-direction:column;gap:9px;margin-bottom:26px">'+INSIGHTS.map(function(ins){return'<div class="card" style="display:flex;gap:12px;border-left:3px solid '+(ins.type==='warn'?'var(--amber)':ins.type==='good'?'var(--green)':'var(--blue)')+'"><div style="font-size:20px">'+(ins.type==='warn'?'⚠️':ins.type==='good'?'✅':'💡')+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">'+ins.title+'</div><div style="font-size:11px;color:var(--t2)">'+ins.desc+'</div>'+(ins.save?'<span class="badge" style="margin-top:6px;background:var(--green-g);color:var(--green)">💰 '+fmt(ins.save)+'/mo</span>':'')+'</div></div>'}).join('')+'</div><h2 style="font-size:17px;font-weight:700;margin-bottom:12px">Partners</h2><div class="grid gf" style="gap:9px">'+VENDORS.map(function(v){return'<a href="'+v.url+'" target="_blank" class="card" style="display:flex;align-items:center;gap:11px;padding:14px"><span style="font-size:24px">'+v.icon+'</span><div style="flex:1"><div style="font-size:12px;font-weight:600">'+v.name+'</div><div style="font-size:10px;color:var(--t3)">'+v.desc+'</div></div><span style="color:var(--t3)">↗</span></a>'}).join('')+'</div></div>';}
+// ==== INSIGHTS (Partners removed) ====
+function renderInsights(){return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Insights</h1><div style="display:flex;flex-direction:column;gap:9px">'+INSIGHTS.map(function(ins){return'<div class="card" style="display:flex;gap:12px;border-left:3px solid '+(ins.type==='warn'?'var(--amber)':ins.type==='good'?'var(--green)':'var(--blue)')+'"><div style="font-size:20px">'+(ins.type==='warn'?'⚠️':ins.type==='good'?'✅':'💡')+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">'+ins.title+'</div><div style="font-size:11px;color:var(--t2)">'+ins.desc+'</div>'+(ins.save?'<span class="badge" style="margin-top:6px;background:var(--green-g);color:var(--green)">💰 '+fmt(ins.save)+'/mo</span>':'')+'</div></div>'}).join('')+'</div></div>';}
 
 // ==== PREDICTIONS (unchanged) ====
 function renderPredictions(){var p=state.predPeriod;var summ={daily:{pred:'$142',conf:'87%',save:'$18/day',risk:'Low',trend:'-3.2% vs last week',pDetail:'Based on 30-day spending pattern analysis',cDetail:'High confidence from consistent daily patterns',sDetail:'Reduce dining out by 1 meal/day',rDetail:'Well within budget guardrails'},weekly:{pred:'$994',conf:'82%',save:'$106/wk',risk:'Medium',trend:'+1.8% vs last month',pDetail:'Aggregated from daily transaction forecasts',cDetail:'Moderate — weekends add variance',sDetail:'Batch cook on Sundays to cut grocery trips',rDetail:'Shopping spikes possible'},monthly:{pred:'$4,180',conf:'78%',save:'$420/mo',risk:'Low',trend:'-8.2% improving',pDetail:'Income minus projected recurring expenses',cDetail:'Lower due to variable expenses',sDetail:'Automate $420 to savings on payday',rDetail:'Stable income, predictable bills'}};var s=summ[p];
