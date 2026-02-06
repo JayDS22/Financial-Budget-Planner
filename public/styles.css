@@ -14,6 +14,8 @@ input,select,button,textarea{font-family:inherit}input:focus,select:focus,textar
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes scoreGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(91,140,255,.2))}50%{filter:drop-shadow(0 0 20px rgba(91,140,255,.4))}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes expandIn{from{opacity:0;max-height:0}to{opacity:1;max-height:800px}}
+@keyframes cardGlow{0%,100%{box-shadow:0 0 20px rgba(91,140,255,.08)}50%{box-shadow:0 0 40px rgba(91,140,255,.18)}}
 .card{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:22px;transition:all .25s ease}.card:hover{border-color:var(--bd2);transform:translateY(-1px)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 22px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s}
 .btn-p{background:linear-gradient(135deg,#5b8cff,#6366f1);color:#fff;box-shadow:0 4px 16px rgba(91,140,255,.2)}.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(91,140,255,.3)}
@@ -50,6 +52,38 @@ input,select,button,textarea{font-family:inherit}input:focus,select:focus,textar
 
 /* Chart card hover */
 .chart-card{transition:all .3s ease}.chart-card:hover{border-color:rgba(91,140,255,.2);box-shadow:0 8px 32px rgba(91,140,255,.08)}
+
+/* Expandable Investment Cards */
+.invest-card{position:relative;overflow:hidden;transition:all .4s cubic-bezier(.25,.8,.25,1);cursor:pointer;border:1px solid var(--bd)}
+.invest-card:hover{border-color:rgba(91,140,255,.25);box-shadow:0 8px 32px rgba(91,140,255,.12);transform:translateY(-2px)}
+.invest-card.expanded{border-color:rgba(91,140,255,.35);box-shadow:0 12px 48px rgba(91,140,255,.18);animation:cardGlow 3s ease infinite;cursor:default;grid-column:1/-1}
+.invest-card .expand-icon{transition:transform .3s ease;display:inline-block}
+.invest-card.expanded .expand-icon{transform:rotate(180deg)}
+.invest-card .card-detail{max-height:0;overflow:hidden;opacity:0;transition:all .45s cubic-bezier(.25,.8,.25,1)}
+.invest-card.expanded .card-detail{max-height:800px;opacity:1}
+.invest-card .mini-spark{transition:all .3s ease}
+.invest-card.expanded .mini-spark{opacity:0;height:0;overflow:hidden}
+
+/* Period toggle buttons */
+.period-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--bd);background:transparent;color:var(--t3);font-size:10px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.period-btn:hover{border-color:var(--bd2);color:var(--t2)}
+.period-btn.active{background:var(--blue-g);border-color:rgba(91,140,255,.3);color:var(--blue);font-weight:600}
+
+/* Stats row in expanded card */
+.stat-pill{padding:8px 14px;border-radius:9px;background:var(--bg1);border:1px solid var(--bd);text-align:center;transition:all .25s}
+.stat-pill:hover{border-color:var(--bd2);transform:translateY(-1px);background:var(--bg3)}
+
+/* Fund expandable row */
+.fund-row{transition:all .3s ease;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03)}
+.fund-row:hover{background:rgba(91,140,255,.04)}
+.fund-row.expanded{background:rgba(91,140,255,.06)}
+.fund-detail-row{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s ease;opacity:0}
+.fund-detail-row.show{max-height:400px;opacity:1}
+
+/* Bond expandable */
+.bond-card{cursor:pointer;transition:all .35s ease}
+.bond-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.3);border-color:var(--bd2)}
+.bond-card.expanded{border-color:rgba(91,140,255,.3);box-shadow:0 12px 40px rgba(91,140,255,.12);grid-column:1/-1}
 
 /* Chat */
 .chat-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#5b8cff,#6366f1);color:#fff;border:none;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(91,140,255,.35);z-index:1000;transition:all .25s}.chat-fab:hover{transform:scale(1.08);box-shadow:0 6px 32px rgba(91,140,255,.45)}
