@@ -241,7 +241,7 @@ function renderSidebar(){
     {id:'credit',l:'Credit & Loans',i:'💳'},
     {id:'investments',l:'Investments',i:'📈'},
     {id:'insights&predictions',l:'Insights & Predictions',i:'💡'},
-    {id:'learn',l:'Learn',i:'📖'}  // ← NEW LINE ADDED
+    {id:'learn',l:'Learn',i:'📖'}
   ];
   
   var stats = (typeof getSmartFeatureStats === 'function') ? getSmartFeatureStats() : {activeCount: 0, totalSaved: 0};
@@ -254,10 +254,10 @@ function renderSidebar(){
         '<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1A1F71,#2E348F);font-size:16px;font-weight:700;color:#fff">V</div>' +
         '<span style="font-size:18px;font-weight:700;color:#1A1F71">VisionFi</span>' +
       '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#FFFFFF;border-radius:8px;border:1px solid rgba(26,31,113,0.1);box-shadow:0 2px 8px rgba(26,31,113,0.06)">' +
-        '<span style="font-size:10px;color:#4A5090;font-weight:500">Powered by</span>' +
-        '<img src="icons/Visa.svg" alt="Visa" style="height:16px" onerror="this.style.display=\'none\'" />' +
-      '</div>' +
+      // '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#FFFFFF;border-radius:8px;border:1px solid rgba(26,31,113,0.1);box-shadow:0 2px 8px rgba(26,31,113,0.06)">' +
+      //   '<span style="font-size:10px;color:#4A5090;font-weight:500">Powered by</span>' +
+      //   '<img src="icons/Visa.svg" alt="Visa" style="height:16px" onerror="this.style.display=\'none\'" />' +
+      // '</div>' +
     '</div>' +
     '<div style="flex:1;padding:16px 12px;overflow-y:auto">' +
       '<div style="font-size:10px;color:#7A80B0;text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:10px;font-weight:600">Menu</div>' +
@@ -271,61 +271,79 @@ function renderSidebar(){
       '</div>' +
     '</div>' +
     '<div style="border-top:1px solid rgba(26,31,113,0.08);background:rgba(26,31,113,0.03)">' +
-      '<div style="padding:12px 12px 8px">' +
-        '<button onclick="openSmartFeaturesPanel()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,135,90,0.08),rgba(26,31,113,0.06));border:1px solid rgba(0,135,90,0.2);border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;color:#1A1F71;font-family:inherit;transition:all 0.2s">' +
-          '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,135,90,0.15),rgba(26,31,113,0.1));display:flex;align-items:center;justify-content:center;font-size:18px">⚙️</div>' +
-          '<div style="flex:1;text-align:left">' +
-            '<div style="font-size:13px;font-weight:600;color:#1A1F71">Smart Features</div>' +
-            '<div style="font-size:11px;color:#7A80B0;margin-top:2px">' +
-              '<span style="color:#00875A;font-weight:600">' + activeCount + ' active</span>' +
-              '<span style="margin:0 6px;color:#7A80B0">•</span>' +
-              '<span style="color:#00875A;font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
-            '</div>' +
-          '</div>' +
-          '<span style="color:#7A80B0;font-size:16px">›</span>' +
-        '</button>' +
-      '</div>' +
-      '<div style="padding:8px 12px 16px;position:relative">' +
-        '<div id="profile-menu" style="display:none;position:absolute;bottom:100%;left:12px;right:12px;margin-bottom:8px;background:#FFFFFF;border:1px solid rgba(26,31,113,0.12);border-radius:14px;padding:6px;box-shadow:0 12px 40px rgba(26,31,113,0.15);z-index:100;animation:fadeIn 0.2s">' +
-          '<div style="padding:14px 12px;border-bottom:1px solid rgba(26,31,113,0.08);margin-bottom:6px">' +
-            '<div style="font-size:15px;font-weight:600;color:#1A1F71">'+u.name+'</div>' +
-            '<div style="font-size:11px;color:#7A80B0;margin-top:2px">'+(u.email||'user@example.com')+'</div>' +
-            (u.tier==='premium' ? 
-              '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(247,182,0,0.15);border-radius:6px;font-size:10px;color:#E5A800;font-weight:600"><span>★</span> Premium Member</div>' 
-              : '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(26,31,113,0.06);border-radius:6px;font-size:10px;color:#7A80B0">Free Plan</div>'
-            ) +
-          '</div>' +
-          '<button onclick="showToast(\'Profile coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>👤</span> My Profile</button>' +
-          '<button onclick="showToast(\'Settings coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>⚙️</span> Settings</button>' +
-          '<button onclick="showToast(\'Notifications coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>🔔</span> Notifications</button>' +
-          '<button onclick="showToast(\'Help coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>❓</span> Help & Support</button>' +
-          '<div style="height:1px;background:rgba(26,31,113,0.08);margin:6px 0"></div>' +
-          (state.users.length > 1 ? 
-            '<div style="padding:6px 8px;margin-bottom:4px">' +
-              '<div style="font-size:10px;color:#7A80B0;margin-bottom:6px;padding-left:4px;font-weight:600">SWITCH ACCOUNT</div>' +
-              state.users.filter(function(usr){return usr.id !== u.id}).map(function(usr){
-                return '<button onclick="switchUser(\''+usr.id+'\');toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;padding:8px;width:100%;background:transparent;border:none;border-radius:6px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:12px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'">' +
-                  '<span style="font-size:16px">'+usr.avatar+'</span>' +
-                  '<span>'+usr.name+'</span>' +
-                '</button>';
-              }).join('') +
-            '</div>' +
-            '<div style="height:1px;background:rgba(26,31,113,0.08);margin:6px 0"></div>'
-            : ''
-          ) +
-          '<button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:rgba(222,53,11,0.08);border:none;border-radius:8px;cursor:pointer;color:#DE350B;font-family:inherit;font-size:13px;text-align:left;font-weight:500;transition:background 0.15s" onmouseover="this.style.background=\'rgba(222,53,11,0.12)\'" onmouseout="this.style.background=\'rgba(222,53,11,0.08)\'"><span>🚪</span> Sign Out</button>' +
+    '<div style="padding:12px 12px 8px">' +
+    
+      // Built using Dedalus Labs
+      // '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;margin-bottom:8px;background:linear-gradient(135deg,rgba(91,140,255,0.08),rgba(176,124,255,0.06));border:1px solid rgba(91,140,255,0.15);border-radius:10px">' +
+      //   '<img src="icons/dedaluslabs.svg" alt="Dedalus API" style="height:20px;width:20px" onerror="this.style.display=\'none\'" />' +
+      //   '<span style="font-size:11px;color:#5b8cff;font-weight:500">Built using Dedalus Labs API</span>' +
+      // '</div>' +
+      
+      // NEW: Daily Briefing Button
+      '<button onclick="openDailyBriefing()" style="width:100%;padding:14px;margin-bottom:8px;background:linear-gradient(135deg,rgba(91,140,255,0.08),rgba(176,124,255,0.06));border:1px solid rgba(91,140,255,0.2);border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;color:#1A1F71;font-family:inherit;transition:all 0.2s">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(91,140,255,0.15),rgba(176,124,255,0.1));display:flex;align-items:center;justify-content:center;font-size:18px">☀️</div>' +
+        '<div style="flex:1;text-align:left">' +
+          '<div style="font-size:13px;font-weight:600;color:#1A1F71">Daily Briefing</div>' +
+          '<div style="font-size:11px;color:#7A80B0;margin-top:2px">Your financial snapshot</div>' +
         '</div>' +
-        '<button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(26,31,113,0.1);cursor:pointer;width:100%;background:#FFFFFF;color:#1A1F71;text-align:left;font-family:inherit;transition:all 0.15s;box-shadow:0 2px 8px rgba(26,31,113,0.06)">' +
-          '<div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#1A1F71,#2E348F);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff">'+u.avatar+'</div>' +
-          '<div style="flex:1">' +
-            '<div style="font-size:13px;font-weight:600;color:#1A1F71">'+u.name+'</div>' +
-            '<div style="font-size:10px;color:#7A80B0">'+(u.email||'user@example.com')+'</div>' +
+        '<span style="color:#7A80B0;font-size:16px">›</span>' +
+      '</button>' +
+      
+      // Smart Features Button
+      '<button onclick="openSmartFeaturesPanel()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,135,90,0.08),rgba(26,31,113,0.06));border:1px solid rgba(0,135,90,0.2);border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;color:#1A1F71;font-family:inherit;transition:all 0.2s">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,135,90,0.15),rgba(26,31,113,0.1));display:flex;align-items:center;justify-content:center;font-size:18px">⚙️</div>' +
+        '<div style="flex:1;text-align:left">' +
+          '<div style="font-size:13px;font-weight:600;color:#1A1F71">Smart Features</div>' +
+          '<div style="font-size:11px;color:#7A80B0;margin-top:2px">' +
+            '<span style="color:#00875A;font-weight:600">' + activeCount + ' active</span>' +
+            '<span style="margin:0 6px;color:#7A80B0">•</span>' +
+            '<span style="color:#00875A;font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
           '</div>' +
-          '<span id="profile-chevron" style="color:#7A80B0;transition:transform 0.2s;font-size:12px">▾</span>' +
-        '</button>' +
-      '</div>' +
+        '</div>' +
+        '<span style="color:#7A80B0;font-size:16px">›</span>' +
+      '</button>' +
     '</div>' +
-  '</div>';
+    '<div style="padding:8px 12px 16px;position:relative">' +
+      '<div id="profile-menu" style="display:none;position:absolute;bottom:100%;left:12px;right:12px;margin-bottom:8px;background:#FFFFFF;border:1px solid rgba(26,31,113,0.12);border-radius:14px;padding:6px;box-shadow:0 12px 40px rgba(26,31,113,0.15);z-index:100;animation:fadeIn 0.2s">' +
+        '<div style="padding:14px 12px;border-bottom:1px solid rgba(26,31,113,0.08);margin-bottom:6px">' +
+          '<div style="font-size:15px;font-weight:600;color:#1A1F71">'+u.name+'</div>' +
+          '<div style="font-size:11px;color:#7A80B0;margin-top:2px">'+(u.email||'user@example.com')+'</div>' +
+          (u.tier==='premium' ? 
+            '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(247,182,0,0.15);border-radius:6px;font-size:10px;color:#E5A800;font-weight:600"><span>★</span> Premium Member</div>' 
+            : '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(26,31,113,0.06);border-radius:6px;font-size:10px;color:#7A80B0">Free Plan</div>'
+          ) +
+        '</div>' +
+        '<button onclick="showToast(\'Profile coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>👤</span> My Profile</button>' +
+        '<button onclick="showToast(\'Settings coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>⚙️</span> Settings</button>' +
+        '<button onclick="showToast(\'Notifications coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>🔔</span> Notifications</button>' +
+        '<button onclick="showToast(\'Help coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>❓</span> Help & Support</button>' +
+        '<div style="height:1px;background:rgba(26,31,113,0.08);margin:6px 0"></div>' +
+        (state.users.length > 1 ? 
+          '<div style="padding:6px 8px;margin-bottom:4px">' +
+            '<div style="font-size:10px;color:#7A80B0;margin-bottom:6px;padding-left:4px;font-weight:600">SWITCH ACCOUNT</div>' +
+            state.users.filter(function(usr){return usr.id !== u.id}).map(function(usr){
+              return '<button onclick="switchUser(\''+usr.id+'\');toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;padding:8px;width:100%;background:transparent;border:none;border-radius:6px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:12px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'">' +
+                '<span style="font-size:16px">'+usr.avatar+'</span>' +
+                '<span>'+usr.name+'</span>' +
+              '</button>';
+            }).join('') +
+          '</div>' +
+          '<div style="height:1px;background:rgba(26,31,113,0.08);margin:6px 0"></div>'
+          : ''
+        ) +
+        '<button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:rgba(222,53,11,0.08);border:none;border-radius:8px;cursor:pointer;color:#DE350B;font-family:inherit;font-size:13px;text-align:left;font-weight:500;transition:background 0.15s" onmouseover="this.style.background=\'rgba(222,53,11,0.12)\'" onmouseout="this.style.background=\'rgba(222,53,11,0.08)\'"><span>🚪</span> Sign Out</button>' +
+      '</div>' +
+      '<button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(26,31,113,0.1);cursor:pointer;width:100%;background:#FFFFFF;color:#1A1F71;text-align:left;font-family:inherit;transition:all 0.15s;box-shadow:0 2px 8px rgba(26,31,113,0.06)">' +
+        '<div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#1A1F71,#2E348F);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff">'+u.avatar+'</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-size:13px;font-weight:600;color:#1A1F71">'+u.name+'</div>' +
+          '<div style="font-size:10px;color:#7A80B0">'+(u.email||'user@example.com')+'</div>' +
+        '</div>' +
+        '<span id="profile-chevron" style="color:#7A80B0;transition:transform 0.2s;font-size:12px">▾</span>' +
+      '</button>' +
+    '</div>' +
+  '</div>' +
+'</div>';
 }
 
 function toggleProfileMenu(){
@@ -351,6 +369,15 @@ function closeSmartFeaturesPanel(){
 }
 window.closeSmartFeaturesPanel = closeSmartFeaturesPanel;
 
+function openDailyBriefing(){
+  if(state.briefingData){
+    state.showBriefing = true;
+    render();
+  } else {
+    showToast('Briefing data not available', 'error');
+  }
+}
+window.openDailyBriefing = openDailyBriefing;
 
 // ========== DAILY BRIEFING (Floating Collapsible) ==========
 function renderBriefing(){
@@ -1080,10 +1107,10 @@ return '<div onclick="if(event.target===this)closeSmartFeaturesPanel()" style="p
       '</div>' +
       '<div style="padding:16px 20px;border-top:1px solid rgba(26,31,113,0.08);background:#FFFFFF">' +
         '<div style="font-size:11px;color:#7A80B0;text-align:center;line-height:1.5;margin-bottom:12px">Features run automatically in the background to help you save money.</div>' +
-        '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:linear-gradient(135deg,#1A1F71,#2E348F);border-radius:8px">' +
-          '<span style="font-size:10px;color:rgba(255,255,255,0.8)">Secured by</span>' +
-          '<img src="icons/Visa.svg" alt="Visa" style="height:18px;filter:brightness(0) invert(1)" onerror="this.style.display=\'none\'" />' +
-        '</div>' +
+        // '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:linear-gradient(135deg,#1A1F71,#2E348F);border-radius:8px">' +
+        //   '<span style="font-size:10px;color:rgba(255,255,255,0.8)">Secured by</span>' +
+        //   '<img src="icons/Visa.svg" alt="Visa" style="height:18px;filter:brightness(0) invert(1)" onerror="this.style.display=\'none\'" />' +
+        // '</div>' +
       '</div>' +
     '</div>' +
   '</div>' +
