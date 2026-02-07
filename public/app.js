@@ -42,8 +42,8 @@ let state={
   orchestratorStep: 0,
   showOrchestrator: false,
   creditCommandData: null,
-  showAutomationModal: false, 
-  showFeaturesModal: false,
+  showAutomationModal: false,
+  showSmartFeaturesPanel: false,
 };
 
 // Export globals for automations.js
@@ -183,14 +183,124 @@ function renderSidebar(){
   var u=state.currentUser;if(!u)return'';
   var tabs=[
     {id:'dashboard',l:'Dashboard',i:'📊'},
-    {id:'subscriptions',l:'Subscriptions',i:'🔄'},
+    {id:'automations',l:'Automations',i:'⚡'},
+    {id:'subscriptions',l:'Subscriptions',i:'📱'},
     {id:'credit',l:'Credit & Loans',i:'💳'},
     {id:'investments',l:'Investments',i:'📈'},
     {id:'insights',l:'Insights',i:'💡'},
     {id:'predictions',l:'Predictions',i:'🔮'}
   ];
-  return'<div class="sidebar" style="width:240px;min-height:100vh;background:var(--bg1);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:16px 10px;position:fixed;left:0;top:0;z-index:50"><div style="display:flex;align-items:center;gap:8;padding:7px 11px;margin-bottom:26px"><div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:14px;font-weight:700;color:#fff">V</div><span style="font-size:16px;font-weight:700">VisionFi</span></div><div style="flex:1;display:flex;flex-direction:column;gap:2px">'+tabs.map(function(t){return'<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:9;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(state.tab===t.id?'var(--blue-g)':'transparent')+';color:'+(state.tab===t.id?'var(--blue)':'var(--t2)')+';font-size:13px;font-weight:'+(state.tab===t.id?600:400)+';font-family:inherit"><span>'+t.i+'</span>'+t.l+'</button>'}).join('')+'</div><div style="position:relative"><div id="user-menu" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:5px;background:var(--bg3);border:1px solid var(--bd2);border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'+state.users.map(function(usr){return'<button onclick="switchUser(\''+usr.id+'\')" style="display:flex;align-items:center;gap:8;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:'+(usr.id===u.id?'var(--blue-g)':'transparent')+';color:var(--t1);font-size:11px;text-align:left;font-family:inherit"><span style="font-size:17px">'+usr.avatar+'</span><div><div style="font-weight:500">'+usr.name+'</div><div style="font-size:9px;color:var(--t3)">'+(usr.tier==='premium'?'★ Premium':'Free')+'</div></div></button>'}).join('')+'<div style="height:1px;background:var(--bd);margin:4px 0"></div><button onclick="set({showFeaturesModal:true});document.getElementById(\'user-menu\').style.display=\'none\'" style="display:flex;align-items:center;gap:7;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:transparent;color:var(--blue);font-size:11px;text-align:left;font-family:inherit">⚙️ Smart Features</button><button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:7;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:transparent;color:var(--red);font-size:11px;text-align:left;font-family:inherit">🚪 Sign Out</button></div><button onclick="var m=document.getElementById(\'user-menu\');m.style.display=m.style.display===\'block\'?\'none\':\'block\'" style="display:flex;align-items:center;gap:8;padding:9px;border-radius:10px;border:1px solid var(--bd);cursor:pointer;width:100%;background:var(--bg2);color:var(--t1);text-align:left;font-family:inherit"><span style="font-size:20px">'+u.avatar+'</span><div style="flex:1"><div style="font-size:11px;font-weight:600">'+u.name+'</div><div style="font-size:9px;color:var(--t3)">'+(u.tier==='premium'?'★ Premium':'Free')+'</div></div><span style="color:var(--t3)">▾</span></button></div></div>';
+  
+  var activeCount = 0;
+  var totalSaved = 0;
+  if(window.automationState && window.automationState.rules){
+    activeCount = window.automationState.rules.filter(function(r){return r.status === 'active'}).length;
+    totalSaved = window.automationState.totalSaved || 0;
+  }
+  
+  return '<div class="sidebar" style="width:260px;min-height:100vh;background:linear-gradient(180deg,#0a0a18 0%,#080814 100%);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:50">' +
+    '<div style="padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.04)">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">' +
+        '<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:16px;font-weight:700;color:#fff">V</div>' +
+        '<span style="font-size:18px;font-weight:700">VisionFi</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">' +
+        '<span style="font-size:10px;color:rgba(255,255,255,0.5)">Powered by</span>' +
+        '<img src="icons/Visa.svg" alt="Visa" style="height:16px" onerror="this.style.display=\'none\'" />' +
+      '</div>' +
+    '</div>' +
+    '<div style="flex:1;padding:16px 12px;overflow-y:auto">' +
+      '<div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:10px">Menu</div>' +
+      '<div style="display:flex;flex-direction:column;gap:2px">' +
+        tabs.map(function(t){
+          var isActive = state.tab===t.id;
+          return '<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(isActive?'rgba(91,140,255,0.12)':'transparent')+';color:'+(isActive?'var(--blue)':'rgba(255,255,255,0.55)')+';font-size:13px;font-weight:'+(isActive?600:400)+';font-family:inherit;transition:all 0.15s">' +
+            '<span style="font-size:15px">'+t.i+'</span>'+t.l +
+          '</button>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+    '<div style="border-top:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2)">' +
+      '<div style="padding:12px 12px 8px">' +
+        '<button onclick="openSmartFeaturesPanel()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(61,219,160,0.12),rgba(91,140,255,0.08));border:1px solid rgba(61,219,160,0.25);border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;color:var(--t1);font-family:inherit;transition:all 0.2s">' +
+          '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(61,219,160,0.2),rgba(91,140,255,0.2));display:flex;align-items:center;justify-content:center;font-size:18px">⚙️</div>' +
+          '<div style="flex:1;text-align:left">' +
+            '<div style="font-size:13px;font-weight:600">Smart Features</div>' +
+            '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">' +
+              '<span style="color:var(--green)">' + activeCount + ' active</span>' +
+              '<span style="margin:0 6px">•</span>' +
+              '<span style="color:var(--green);font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
+            '</div>' +
+          '</div>' +
+          '<span style="color:rgba(255,255,255,0.4);font-size:16px">›</span>' +
+        '</button>' +
+      '</div>' +
+      '<div style="padding:8px 12px 16px;position:relative">' +
+        '<div id="profile-menu" style="display:none;position:absolute;bottom:100%;left:12px;right:12px;margin-bottom:8px;background:#14142a;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,0.5);z-index:100;animation:fadeIn 0.2s">' +
+          '<div style="padding:14px 12px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:6px">' +
+            '<div style="font-size:15px;font-weight:600">'+u.name+'</div>' +
+            '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">'+(u.email||'user@example.com')+'</div>' +
+            (u.tier==='premium' ? 
+              '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(255,184,77,0.15);border-radius:6px;font-size:10px;color:#ffb84d;font-weight:600"><span>★</span> Premium Member</div>' 
+              : '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:6px;font-size:10px;color:var(--t3)">Free Plan</div>'
+            ) +
+          '</div>' +
+          '<button onclick="showToast(\'Profile coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>👤</span> My Profile</button>' +
+          '<button onclick="showToast(\'Settings coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>⚙️</span> Settings</button>' +
+          '<button onclick="showToast(\'Notifications coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>🔔</span> Notifications</button>' +
+          '<button onclick="showToast(\'Help coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>❓</span> Help & Support</button>' +
+          '<div style="height:1px;background:rgba(255,255,255,0.06);margin:6px 0"></div>' +
+          (state.users.length > 1 ? 
+            '<div style="padding:6px 8px;margin-bottom:4px">' +
+              '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:6px;padding-left:4px">SWITCH ACCOUNT</div>' +
+              state.users.filter(function(usr){return usr.id !== u.id}).map(function(usr){
+                return '<button onclick="switchUser(\''+usr.id+'\');toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;padding:8px;width:100%;background:transparent;border:none;border-radius:6px;cursor:pointer;color:var(--t2);font-family:inherit;font-size:12px;text-align:left">' +
+                  '<span style="font-size:16px">'+usr.avatar+'</span>' +
+                  '<span>'+usr.name+'</span>' +
+                '</button>';
+              }).join('') +
+            '</div>' +
+            '<div style="height:1px;background:rgba(255,255,255,0.06);margin:6px 0"></div>'
+            : ''
+          ) +
+          '<button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:rgba(255,107,107,0.1);border:none;border-radius:8px;cursor:pointer;color:#ff6b6b;font-family:inherit;font-size:13px;text-align:left;font-weight:500"><span>🚪</span> Sign Out</button>' +
+        '</div>' +
+        '<button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;width:100%;background:transparent;color:var(--t1);text-align:left;font-family:inherit;transition:all 0.15s">' +
+          '<div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#5b8cff,#b07cff);display:flex;align-items:center;justify-content:center;font-size:18px">'+u.avatar+'</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-size:13px;font-weight:600">'+u.name+'</div>' +
+            '<div style="font-size:10px;color:rgba(255,255,255,0.4)">'+(u.email||'user@example.com')+'</div>' +
+          '</div>' +
+          '<span id="profile-chevron" style="color:rgba(255,255,255,0.4);transition:transform 0.2s;font-size:12px">▾</span>' +
+        '</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
 }
+
+function toggleProfileMenu(){
+  var menu = document.getElementById('profile-menu');
+  var chevron = document.getElementById('profile-chevron');
+  if(menu){
+    var isOpen = menu.style.display === 'block';
+    menu.style.display = isOpen ? 'none' : 'block';
+    if(chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+}
+window.toggleProfileMenu = toggleProfileMenu;
+
+function openSmartFeaturesPanel(){
+  state.showSmartFeaturesPanel = true;
+  render();
+}
+window.openSmartFeaturesPanel = openSmartFeaturesPanel;
+
+function closeSmartFeaturesPanel(){
+  state.showSmartFeaturesPanel = false;
+  render();
+}
+window.closeSmartFeaturesPanel = closeSmartFeaturesPanel;
+
 
 // ========== DAILY BRIEFING (Floating Collapsible) ==========
 function renderBriefing(){
@@ -515,7 +625,7 @@ function renderSubscriptionHub() {
             '<span style="font-size:14px;font-weight:600;color:var(--green)">Good Value</span>' +
             '<span style="font-size:12px;color:var(--t3)">(' + keepSubs.length + ' subscriptions · $' + keepTotal.toFixed(2) + '/mo)</span>' +
           '</div>' +
-          '<span style="color:var(--t3);font-size:12px" id="keep-toggle-icon">' + (state.showKeepSubs ? '▼ Hide' : '▶ Show') + '</span>' +
+          '<span style="color:var(--t3);font-size:12px" id="keep-toggle-icon">' + (state.showKeepSubs ? 'â–¼ Hide' : 'â–¶ Show') + '</span>' +
         '</div>' +
         '<div id="keep-subs-list" style="display:' + (state.showKeepSubs ? 'flex' : 'none') + ';flex-direction:column;gap:8px;margin-top:14px">' +
           keepSubs.map(function(sub) { return renderCompactSubRow(sub, 'keep'); }).join('') +
@@ -665,14 +775,16 @@ function render(){
   if(state.page==='landing')html=renderLanding()+renderChat();
   else if(state.page==='auth')html=renderAuth();
   else if(state.page==='app'){
-    html=renderSidebar()+'<main class="main-content" style="margin-left:240px;padding:24px 28px;max-width:1060px">'+
+    html=renderSidebar()+'<main class="main-content" style="margin-left:260px;padding:24px 28px;max-width:1060px">'+
       (state.tab==='dashboard'?renderDashboard():'')+
       (state.tab==='subscriptions'?renderSubscriptionHub():'')+
       (state.tab==='credit'?renderCredit():'')+
       (state.tab==='investments'?renderInvestments():'')+
       (state.tab==='insights'?renderInsights():'')+
+      (state.tab==='automations'?(typeof renderAutomationsTab==='function'?renderAutomationsTab():''):'')+
       (state.tab==='predictions'?renderPredictions():'')+
-     '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal()+(typeof renderFeaturesModal==='function'?renderFeaturesModal():'');
+    // '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal();
+     '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal()+(typeof renderAutomationModal==='function'?renderAutomationModal():'')+(typeof renderSmartFeaturesPanel==='function'?renderSmartFeaturesPanel():'');
   }
   
   root.innerHTML=html;
@@ -820,6 +932,107 @@ window.switchUser=function(id){
   state.subscriptionAnalysis=null; // Reset subscription data for new user
 };
 
+
+
+// ========== SMART FEATURES PANEL ==========
+function renderSmartFeaturesPanel(){
+  if(!state.showSmartFeaturesPanel) return '';
+  
+  var rules = (window.automationState && window.automationState.rules) || [];
+  var totalSaved = (window.automationState && window.automationState.totalSaved) || 0;
+  var activeCount = rules.filter(function(r){return r.status === 'active'}).length;
+  
+  var features = [
+    {id:'round_up',icon:'🪙',name:'Round-Up Savings',desc:'Round up purchases and save the difference',presets:['Nearest $1','Nearest $5','Nearest $10'],hasSaved:true},
+    {id:'under_budget',icon:'💰',name:'Under-Budget Sweep',desc:'Auto-save when daily spending is under budget',presets:['50% of savings','100% of savings'],hasSaved:true},
+    {id:'bill_reminder',icon:'🔔',name:'Bill Reminders',desc:'Get notified before bills are due',presets:null},
+    {id:'subscription_guard',icon:'🛡️',name:'Subscription Guard',desc:'Alert on unused subscriptions',presets:null},
+    {id:'spending_limit',icon:'⚠️',name:'Spending Alerts',desc:'Warn when category budget is nearly spent',presets:null},
+    {id:'savings_goal',icon:'🎯',name:'Auto Daily Savings',desc:'Automatically save a fixed amount daily',presets:null}
+  ];
+  
+  features.forEach(function(f){
+    var rule = rules.find(function(r){return r.type === f.id});
+    f.enabled = rule ? rule.status === 'active' : false;
+    f.savedAmount = rule && rule.totalSaved ? rule.totalSaved : (f.id==='round_up'?151.51:f.id==='under_budget'?486.75:0);
+  });
+  
+  return '<div onclick="if(event.target===this)closeSmartFeaturesPanel()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;animation:fadeIn 0.2s">' +
+    '<div style="position:fixed;top:0;right:0;bottom:0;width:400px;background:linear-gradient(180deg,#0e0e1a 0%,#0a0a14 100%);border-left:1px solid rgba(255,255,255,0.08);z-index:201;display:flex;flex-direction:column;animation:slideInRight 0.3s ease">' +
+      '<div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div>' +
+          '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
+            '<span style="font-size:22px">⚙️</span>' +
+            '<h2 style="font-size:20px;font-weight:700;margin:0">Smart Features</h2>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.5)">' +
+            '<span style="color:var(--green)">' + activeCount + ' active</span>' +
+            '<span>•</span>' +
+            '<span style="color:var(--green);font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
+          '</div>' +
+        '</div>' +
+        '<button onclick="closeSmartFeaturesPanel()" style="width:32px;height:32px;border-radius:8px;border:none;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>' +
+      '</div>' +
+      '<div style="flex:1;overflow-y:auto;padding:16px 20px">' +
+        features.map(function(f,idx){
+          var isMain = idx < 2;
+          var bg = f.enabled ? (isMain ? 'linear-gradient(135deg,rgba(61,219,160,0.08),rgba(91,140,255,0.05))' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.02)';
+          var border = f.enabled ? (isMain ? 'rgba(61,219,160,0.2)' : 'rgba(255,255,255,0.08)') : 'rgba(255,255,255,0.06)';
+          return '<div style="padding:'+(isMain?'18px':'16px')+';background:'+bg+';border:1px solid '+border+';border-radius:'+(isMain?'14px':'12px')+';margin-bottom:'+(isMain?'12px':'10px')+';display:flex;'+(isMain?'flex-direction:column':'justify-content:space-between;align-items:center')+'">' +
+            '<div style="display:flex;'+(isMain?'justify-content:space-between;align-items:flex-start;margin-bottom:12px':'gap:12px;align-items:center')+'">' +
+              '<div style="display:flex;gap:12px;'+(isMain?'':'align-items:center')+'">' +
+                '<span style="font-size:'+(isMain?'28px':'22px')+'">'+f.icon+'</span>' +
+                '<div>' +
+                  '<div style="font-size:'+(isMain?'15px':'14px')+';font-weight:'+(isMain?'600':'500')+'">'+f.name+'</div>' +
+                  '<div style="font-size:'+(isMain?'12px':'11px')+';color:rgba(255,255,255,'+(isMain?'0.5':'0.4')+');margin-top:'+(isMain?'4px':'2px')+'">'+f.desc+'</div>' +
+                '</div>' +
+              '</div>' +
+              (isMain ? renderToggle(f.id, f.enabled) : '') +
+            '</div>' +
+            (isMain && f.enabled ? 
+              '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(61,219,160,0.15);border-radius:8px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px">Saved: $'+f.savedAmount.toFixed(2)+'</div>' +
+              (f.presets ? '<div style="display:flex;gap:8px">'+f.presets.map(function(p,i){
+                return '<button onclick="event.stopPropagation()" style="flex:1;padding:10px;border-radius:8px;border:none;background:'+(i===0?'linear-gradient(135deg,#5b8cff,#b07cff)':'rgba(255,255,255,0.06)')+';color:'+(i===0?'white':'rgba(255,255,255,0.6)')+';font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">'+p+'</button>';
+              }).join('')+'</div>' : '')
+              : ''
+            ) +
+            (!isMain ? renderToggle(f.id, f.enabled) : '') +
+          '</div>';
+        }).join('') +
+      '</div>' +
+      '<div style="padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2)">' +
+        '<div style="font-size:11px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5;margin-bottom:12px">Features run automatically in the background to help you save money.</div>' +
+        '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">' +
+          '<span style="font-size:10px;color:rgba(255,255,255,0.4)">Secured by</span>' +
+          '<img src="icons/Visa.svg" alt="Visa" style="height:18px" onerror="this.style.display=\'none\'" />' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>' +
+  '<style>@keyframes slideInRight{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}</style>';
+}
+
+function renderToggle(id, enabled){
+  return '<button onclick="toggleSmartFeature(\''+id+'\');event.stopPropagation()" style="width:40px;height:22px;border-radius:11px;border:none;background:'+(enabled?'linear-gradient(135deg,#3ddba0,#2bb88a)':'rgba(255,255,255,0.1)')+';cursor:pointer;position:relative;transition:all 0.2s ease;flex-shrink:0">' +
+    '<div style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:3px;left:'+(enabled?'21px':'3px')+';transition:left 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.2)"></div>' +
+  '</button>';
+}
+
+function toggleSmartFeature(featureId){
+  if(window.automationState && window.automationState.rules){
+    var rule = window.automationState.rules.find(function(r){return r.type === featureId});
+    if(rule && typeof toggleAutomation === 'function'){
+      toggleAutomation(rule.id);
+    } else if(typeof createAutomation === 'function'){
+      createAutomation(featureId, { value: 1 });
+    }
+  } else {
+    showToast('Toggled: ' + featureId, 'success');
+  }
+  render();
+}
+window.toggleSmartFeature = toggleSmartFeature;
+
 // ========== INIT ==========
 window.render = render;  // ADD THIS LINE
 render();
@@ -895,7 +1108,7 @@ function renderOrchestratorModal() {
   
   // Model pipeline visualization
   const models = [
-    { id: 1, name: 'Claude Haiku', task: 'Categorizing transactions...', icon: '⚡', color: '#3ddba0' },
+    { id: 1, name: 'Claude Haiku', task: 'Categorizing transactions...', icon: 'âš¡', color: '#3ddba0' },
     { id: 2, name: 'GPT-4o-mini', task: 'Detecting patterns...', icon: '🔍', color: '#5b8cff' },
     { id: 3, name: 'Claude Sonnet', task: 'Generating advice...', icon: '🧠', color: '#b07cff' }
   ];

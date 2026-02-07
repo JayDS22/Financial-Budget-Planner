@@ -316,7 +316,7 @@ input,select,button,textarea{font-family:inherit}input:focus,select:focus,textar
   gap:6px;
 }
 .intake-progress-text::before{
-  content:'💬';
+  content:'ðŸ’¬';
   font-size:12px;
 }
 
@@ -421,7 +421,7 @@ input,select,button,textarea{font-family:inherit}input:focus,select:focus,textar
   border-top:1px solid var(--bd);
   flex-shrink:0;
 }
-.intake-hint::before{content:'👆'}
+.intake-hint::before{content:'ðŸ‘†'}
 
 /* ========== DAILY BRIEFING ========== */
 .briefing-card {
@@ -475,6 +475,70 @@ input,select,button,textarea{font-family:inherit}input:focus,select:focus,textar
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Smart Features Panel Animation */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Smart Features Panel Styles */
+.smart-features-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 400px;
+  background: linear-gradient(180deg, #0e0e1a 0%, #0a0a14 100%);
+  border-left: 1px solid rgba(255,255,255,0.08);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease;
+}
+
+.smart-toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.smart-toggle.active {
+  background: linear-gradient(135deg, #3ddba0, #2bb88a);
+}
+
+.smart-toggle:not(.active) {
+  background: rgba(255,255,255,0.1);
+}
+
+.smart-toggle .toggle-knob {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 3px;
+  transition: left 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.smart-toggle.active .toggle-knob {
+  left: 21px;
+}
+
+.smart-toggle:not(.active) .toggle-knob {
+  left: 3px;
 }
 
 /* Temporary: hide duplicate briefing modal */
