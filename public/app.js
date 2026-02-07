@@ -8,7 +8,7 @@ let apiKey=localStorage.getItem('visionfi_api_key') || '';
     const res = await fetch('/api/config');
     const config = await res.json();
     apiKey = config.apiKey;
-    console.log('API key ready', config.apiKey);
+    console.log('API key ready and start with sk-ant- ', apiKey.startsWith('sk-ant-'));
   }
 })();
 
