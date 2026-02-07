@@ -13,12 +13,12 @@ try {
       apiKey: process.env.DEDALUS_API_KEY,
       environment: 'production'
     });
-    console.log('✅ Dedalus SDK initialized - Multi-model routing enabled');
+    console.log('âœ… Dedalus SDK initialized - Multi-model routing enabled');
   } else {
-    console.log('⚠️  DEDALUS_API_KEY not found - Using Anthropic fallback');
+    console.log('âš ï¸  DEDALUS_API_KEY not found - Using Anthropic fallback');
   }
 } catch (e) {
-  console.log('⚠️  Dedalus SDK not installed - Using Anthropic fallback');
+  console.log('âš ï¸  Dedalus SDK not installed - Using Anthropic fallback');
   console.log('   Run: npm install dedalus-labs');
 }
 
@@ -100,14 +100,14 @@ async function initDB() {
 
   // 3 Users
   const users = [
-    ['u1','Alex Chen','alex@cmu.edu','demo123','👨‍💻',7500,'USD','premium','Financial Independence'],
-    ['u2','Sarah Kim','sarah@gmail.com','demo123','👩‍🔬',6200,'USD','free','Save for House'],
-    ['u3','Jay Gupta','jay@cmu.edu','demo123','👨‍🎓',8500,'USD','premium','Debt Freedom']
+    ['u1','Alex Chen','alex@cmu.edu','demo123','ðŸ‘¨â€ðŸ’»',7500,'USD','premium','Financial Independence'],
+    ['u2','Sarah Kim','sarah@gmail.com','demo123','ðŸ‘©â€ðŸ”¬',6200,'USD','free','Save for House'],
+    ['u3','Jay Gupta','jay@cmu.edu','demo123','ðŸ‘¨â€ðŸŽ“',8500,'USD','premium','Debt Freedom']
   ];
   for (const u of users) db.run(`INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?)`, u);
 
   // Transactions
-  const txs = [['Whole Foods',-82.45,'Food & Dining','🛒','2026-02-05','expense'],['Uber Ride',-24.50,'Transport','🚗','2026-02-04','expense'],['Netflix',-15.99,'Subscriptions','🎬','2026-02-04','expense'],['Payroll Deposit',3750.00,'Income','💰','2026-02-03','income'],['Amazon',-67.89,'Shopping','📦','2026-02-03','expense'],['Starbucks',-6.75,'Food & Dining','☕','2026-02-02','expense'],['Electric Bill',-145.00,'Utilities','💡','2026-02-01','expense'],['CVS Pharmacy',-32.10,'Healthcare','💊','2026-02-01','expense'],['Movie Tickets',-28.00,'Entertainment','🎟️','2026-01-31','expense'],['Freelance Pay',1200.00,'Income','💵','2026-01-30','income'],['Gas Station',-52.30,'Transport','⛽','2026-01-30','expense'],['Target',-94.20,'Shopping','🎯','2026-01-29','expense'],['Rent Payment',-2200.00,'Housing','🏠','2026-02-01','expense'],['Spotify',-10.99,'Subscriptions','🎵','2026-02-01','expense'],['Gym',-49.99,'Healthcare','💪','2026-02-01','expense']];
+  const txs = [['Whole Foods',-82.45,'Food & Dining','ðŸ›’','2026-02-05','expense'],['Uber Ride',-24.50,'Transport','ðŸš—','2026-02-04','expense'],['Netflix',-15.99,'Subscriptions','ðŸŽ¬','2026-02-04','expense'],['Payroll Deposit',3750.00,'Income','ðŸ’°','2026-02-03','income'],['Amazon',-67.89,'Shopping','ðŸ“¦','2026-02-03','expense'],['Starbucks',-6.75,'Food & Dining','â˜•','2026-02-02','expense'],['Electric Bill',-145.00,'Utilities','ðŸ’¡','2026-02-01','expense'],['CVS Pharmacy',-32.10,'Healthcare','ðŸ’Š','2026-02-01','expense'],['Movie Tickets',-28.00,'Entertainment','ðŸŽŸï¸','2026-01-31','expense'],['Freelance Pay',1200.00,'Income','ðŸ’µ','2026-01-30','income'],['Gas Station',-52.30,'Transport','â›½','2026-01-30','expense'],['Target',-94.20,'Shopping','ðŸŽ¯','2026-01-29','expense'],['Rent Payment',-2200.00,'Housing','ðŸ ','2026-02-01','expense'],['Spotify',-10.99,'Subscriptions','ðŸŽµ','2026-02-01','expense'],['Gym',-49.99,'Healthcare','ðŸ’ª','2026-02-01','expense']];
   for (const uid of ['u1','u2','u3']) for (const t of txs) db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [uuidv4(),uid,...t]);
 
   // Budgets
@@ -117,33 +117,33 @@ async function initDB() {
   // Subscriptions - Different for each user for realistic demo
   const userSubs = {
     'u1': [ // Alex - Tech professional
-      ['Netflix',22.99,'🎬','2026-02-15','active'],
-      ['Spotify',16.99,'🎵','2026-02-12','active'],
-      ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'],
-      ['AWS',32.50,'🖥️','2026-02-28','active'],
-      ['Adobe CC',54.99,'🎨','2026-02-18','active'],
-      ['NYT',17.00,'📰','2026-02-10','active'],
-      ['GitHub Pro',7.00,'💻','2026-02-20','active'],
-      ['iCloud+',2.99,'☁️','2026-02-20','active']
+      ['Netflix',22.99,'ðŸŽ¬','2026-02-15','active'],
+      ['Spotify',16.99,'ðŸŽµ','2026-02-12','active'],
+      ['ChatGPT Plus',20.00,'ðŸ¤–','2026-02-22','active'],
+      ['AWS',32.50,'ðŸ–¥ï¸','2026-02-28','active'],
+      ['Adobe CC',54.99,'ðŸŽ¨','2026-02-18','active'],
+      ['NYT',17.00,'ðŸ“°','2026-02-10','active'],
+      ['GitHub Pro',7.00,'ðŸ’»','2026-02-20','active'],
+      ['iCloud+',2.99,'â˜ï¸','2026-02-20','active']
     ],
     'u2': [ // Sarah - Student/Researcher  
-      ['Spotify',10.99,'🎵','2026-02-12','active'],
-      ['Netflix',15.99,'🎬','2026-02-15','active'],
-      ['Hulu',15.99,'📺','2026-02-25','active'],
-      ['Gym',49.99,'💪','2026-03-01','active'],
-      ['iCloud+',2.99,'☁️','2026-02-20','active'],
-      ['Notion',10.00,'📝','2026-02-18','active']
+      ['Spotify',10.99,'ðŸŽµ','2026-02-12','active'],
+      ['Netflix',15.99,'ðŸŽ¬','2026-02-15','active'],
+      ['Hulu',15.99,'ðŸ“º','2026-02-25','active'],
+      ['Gym',49.99,'ðŸ’ª','2026-03-01','active'],
+      ['iCloud+',2.99,'â˜ï¸','2026-02-20','active'],
+      ['Notion',10.00,'ðŸ“','2026-02-18','active']
     ],
     'u3': [ // Jay - Premium user
-      ['Netflix',22.99,'🎬','2026-02-15','active'],
-      ['Spotify Family',16.99,'🎵','2026-02-12','active'],
-      ['HBO Max',15.99,'🎥','2026-02-20','active'],
-      ['Adobe CC',54.99,'🎨','2026-02-18','active'],
-      ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'],
-      ['Gym',79.99,'💪','2026-03-01','active'],
-      ['WSJ',38.99,'📰','2026-02-10','active'],
-      ['iCloud+',9.99,'☁️','2026-02-20','active'],
-      ['Disney+',13.99,'🏰','2026-02-25','active']
+      ['Netflix',22.99,'ðŸŽ¬','2026-02-15','active'],
+      ['Spotify Family',16.99,'ðŸŽµ','2026-02-12','active'],
+      ['HBO Max',15.99,'ðŸŽ¥','2026-02-20','active'],
+      ['Adobe CC',54.99,'ðŸŽ¨','2026-02-18','active'],
+      ['ChatGPT Plus',20.00,'ðŸ¤–','2026-02-22','active'],
+      ['Gym',79.99,'ðŸ’ª','2026-03-01','active'],
+      ['WSJ',38.99,'ðŸ“°','2026-02-10','active'],
+      ['iCloud+',9.99,'â˜ï¸','2026-02-20','active'],
+      ['Disney+',13.99,'ðŸ°','2026-02-25','active']
     ]
   };
 
@@ -185,15 +185,15 @@ async function initDB() {
 
   // Credit spending
   const ccs = [
-    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','✈️'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','🏨'],
-    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','🛒'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','🏪'],
-    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','⛽'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','🍎'],
-    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','🎯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','🍔'],
-    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','📦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','💄'],
-    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','🛒'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','👗'],
-    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','🏨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','🍷'],
-    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','👜'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','💻'],
-    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','🛒'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','🔨'],
+    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','âœˆï¸'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','ðŸ¨'],
+    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','ðŸ›’'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','ðŸª'],
+    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','â›½'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','ðŸŽ'],
+    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','ðŸŽ¯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','ðŸ”'],
+    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','ðŸ“¦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','ðŸ’„'],
+    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','ðŸ›’'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','ðŸ‘—'],
+    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','ðŸ¨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','ðŸ·'],
+    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','ðŸ‘œ'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','ðŸ’»'],
+    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','ðŸ›’'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','ðŸ”¨'],
   ];
   for (const s of ccs) db.run(`INSERT INTO credit_spending VALUES(?,?,?,?,?,?,?,?)`, [uuidv4(),...s]);
 
@@ -227,7 +227,7 @@ async function initDB() {
   db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, ['sv2', 'u2', 45.67, '2026-02-07T09:15:00Z']);
   db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, ['sv3', 'u3', 560.00, '2026-02-07T06:00:00Z']);
 
-  console.log('✅ Database ready: 3 users, credit reports, cards, loans, EMIs, agent memory');
+  console.log('âœ… Database ready: 3 users, credit reports, cards, loans, EMIs, agent memory');
 }
 
 // Auth
@@ -235,7 +235,7 @@ app.post('/api/register', (req, res) => {
   const {name,email,password,income,currency,goal} = req.body;
   if (!name||!email||!password) return res.status(400).json({error:'All fields required'});
   if (query(`SELECT id FROM users WHERE email=?`,[email]).length) return res.status(409).json({error:'Email exists'});
-  const id=uuidv4(), av=['👤','👩‍💼','👨‍🎓','👩‍🎨','🧑‍💻'][Math.floor(Math.random()*5)];
+  const id=uuidv4(), av=['ðŸ‘¤','ðŸ‘©â€ðŸ’¼','ðŸ‘¨â€ðŸŽ“','ðŸ‘©â€ðŸŽ¨','ðŸ§‘â€ðŸ’»'][Math.floor(Math.random()*5)];
   db.run(`INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)`, [id,name,email,password,av,income||5000,currency||'USD','free',goal||'General']);
   const cats=[['Housing',2200],['Food & Dining',800],['Transport',450],['Entertainment',300],['Shopping',500],['Subscriptions',120],['Healthcare',200],['Utilities',280]];
   for(const c of cats) db.run(`INSERT INTO budgets VALUES(?,?,?,?)`,[uuidv4(),id,...c]);
@@ -581,7 +581,7 @@ app.get('/api/briefing/:userId', (req, res) => {
         amount: loan.emi_amount,
         daysUntil: daysUntil,
         type: 'loan',
-        icon: '🏦'
+        icon: 'ðŸ¦'
       });
     }
   });
@@ -600,13 +600,13 @@ app.get('/api/briefing/:userId', (req, res) => {
   let greeting, emoji;
   if (hour < 12) {
     greeting = 'Good morning';
-    emoji = '☀️';
+    emoji = 'â˜€ï¸';
   } else if (hour < 17) {
     greeting = 'Good afternoon';
-    emoji = '🌤️';
+    emoji = 'ðŸŒ¤ï¸';
   } else {
     greeting = 'Good evening';
-    emoji = '🌙';
+    emoji = 'ðŸŒ™';
   }
   
   res.json({
@@ -656,7 +656,7 @@ function generateSmartTip(transactions, upcomingBills, user) {
   if (topMerchant && upcomingBills.length > 0) {
     const avgSpend = Math.round(topTotal / topCount * 100) / 100;
     return {
-      text: `Skip ${topMerchant} today → Extra buffer for ${upcomingBills[0].name}`,
+      text: `Skip ${topMerchant} today â†’ Extra buffer for ${upcomingBills[0].name}`,
       detail: `You've visited ${topCount} times this month ($${topTotal.toFixed(2)} total)`,
       savings: avgSpend
     };
@@ -942,18 +942,18 @@ Patterns: ${JSON.stringify(pipelineResults.step2_patterns)}
 
 Create a response with EXACTLY this structure (use markdown):
 
-## 🎯 Your Personalized Action Plan
+## ðŸŽ¯ Your Personalized Action Plan
 
-### 💰 Quick Wins (This Week)
+### ðŸ’° Quick Wins (This Week)
 [3 specific actions with exact dollar amounts]
 
-### 📊 Key Insights
+### ðŸ“Š Key Insights
 [2-3 most important findings from the analysis]
 
-### 🚀 30-Day Challenge
+### ðŸš€ 30-Day Challenge
 [One focused goal with measurable target]
 
-### 📈 Impact on ${user.goal}
+### ðŸ“ˆ Impact on ${user.goal}
 [How these changes accelerate their goal - be specific with timeline]
 
 Keep response under 300 words. Use **bold** for numbers. Be specific and actionable.`;
@@ -1022,7 +1022,7 @@ app.get('/api/credit/upcoming/:userId', (req, res) => {
         type: 'credit_card',
         id: card.id,
         name: card.card_name,
-        icon: '💳',
+        icon: 'ðŸ’³',
         amount: card.current_balance,
         minAmount: card.min_payment,
         dueDate: card.due_date,
@@ -1047,7 +1047,7 @@ app.get('/api/credit/upcoming/:userId', (req, res) => {
         type: 'loan_emi',
         id: loan.id,
         name: loan.loan_name,
-        icon: '🏦',
+        icon: 'ðŸ¦',
         amount: loan.emi_amount,
         dueDate: loan.next_emi_date,
         daysUntil,
@@ -1240,7 +1240,7 @@ app.post('/api/credit/simulate', (req, res) => {
 app.post('/api/transactions', (req,res) => {
   const {user_id,name,amount,category,icon,date,type}=req.body;
   const id=uuidv4();
-  db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [id,user_id,name,amount,category,icon||'💳',date,type||'expense']);
+  db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [id,user_id,name,amount,category,icon||'ðŸ’³',date,type||'expense']);
   res.json({success:true,id});
 });
 
@@ -1250,16 +1250,16 @@ app.post('/api/transactions', (req,res) => {
 
 // ---- PARTNER LINKS (shared across all agents) ----
 const PARTNER_LINKS = `
-PARTNER PLATFORMS â€” Always recommend relevant ones using markdown links:
-- [Vanguard](https://vanguard.com) â€” Index funds, retirement accounts (VTSAX, VFIAX, Target Date funds)
-- [Fidelity](https://fidelity.com) â€” Zero-fee index funds (FZROX, FZILX), retirement, cash management
-- [Schwab](https://schwab.com) â€” Low-cost ETFs (SCHB, SCHD), intelligent portfolios
-- [Betterment](https://betterment.com) â€” Robo-advisor, automated investing, cash reserve
-- [Robinhood](https://robinhood.com) â€” Commission-free stocks/ETFs, IRA, cash sweep
-- [Coinbase](https://coinbase.com) â€” Cryptocurrency (recommend <5% allocation only)
-- [SoFi](https://sofi.com) â€” Student loan refinancing, personal loans, banking
-- [Marcus by Goldman Sachs](https://marcus.com) â€” High-yield savings, personal loans
-- [Ally](https://ally.com) â€” High-yield savings, CDs, auto financing
+PARTNER PLATFORMS Ã¢â‚¬â€ Always recommend relevant ones using markdown links:
+- [Vanguard](https://vanguard.com) Ã¢â‚¬â€ Index funds, retirement accounts (VTSAX, VFIAX, Target Date funds)
+- [Fidelity](https://fidelity.com) Ã¢â‚¬â€ Zero-fee index funds (FZROX, FZILX), retirement, cash management
+- [Schwab](https://schwab.com) Ã¢â‚¬â€ Low-cost ETFs (SCHB, SCHD), intelligent portfolios
+- [Betterment](https://betterment.com) Ã¢â‚¬â€ Robo-advisor, automated investing, cash reserve
+- [Robinhood](https://robinhood.com) Ã¢â‚¬â€ Commission-free stocks/ETFs, IRA, cash sweep
+- [Coinbase](https://coinbase.com) Ã¢â‚¬â€ Cryptocurrency (recommend <5% allocation only)
+- [SoFi](https://sofi.com) Ã¢â‚¬â€ Student loan refinancing, personal loans, banking
+- [Marcus by Goldman Sachs](https://marcus.com) Ã¢â‚¬â€ High-yield savings, personal loans
+- [Ally](https://ally.com) Ã¢â‚¬â€ High-yield savings, CDs, auto financing
 `;
 
 // ---- FORMATTING RULES (shared across all agents) ----
@@ -1269,7 +1269,7 @@ CRITICAL FORMATTING & BEHAVIOR RULES:
 2. Keep each response under 120 words.
 3. When mentioning partners, use markdown: [Platform Name](URL)
 4. Bold key numbers: **$5,000**, **22%**, **6 months**
-5. Use bullet points sparingly â€” only for lists of 3+ items.
+5. Use bullet points sparingly Ã¢â‚¬â€ only for lists of 3+ items.
 6. Be warm, specific, and use the user's actual data (dollar amounts, scores, etc.).
 7. After collecting all intake answers, deliver a structured action plan with:
    - Specific dollar amounts and timelines
@@ -1279,7 +1279,7 @@ CRITICAL FORMATTING & BEHAVIOR RULES:
 `;
 
 // ==================================================================
-// AGENT MANAGER â€” Routes to the correct specialist agent
+// AGENT MANAGER Ã¢â‚¬â€ Routes to the correct specialist agent
 // ==================================================================
 const AGENT_MANAGER_PROMPT = `You are the VisionFi Agent Manager. Your ONLY job is to:
 1. Detect which financial goal the user is asking about
@@ -1289,11 +1289,11 @@ const AGENT_MANAGER_PROMPT = `You are the VisionFi Agent Manager. Your ONLY job 
 You do NOT give financial advice yourself. You ONLY route.
 
 Available specialist agents:
-- "FI_AGENT" â€” Financial Independence / FIRE
-- "RETIREMENT_AGENT" â€” Retirement Planning
-- "DEBT_AGENT" â€” Debt Freedom / Debt Payoff
-- "HOUSE_AGENT" â€” Save for House / Home Buying
-- "EMERGENCY_AGENT" â€” Emergency Fund
+- "FI_AGENT" Ã¢â‚¬â€ Financial Independence / FIRE
+- "RETIREMENT_AGENT" Ã¢â‚¬â€ Retirement Planning
+- "DEBT_AGENT" Ã¢â‚¬â€ Debt Freedom / Debt Payoff
+- "HOUSE_AGENT" Ã¢â‚¬â€ Save for House / Home Buying
+- "EMERGENCY_AGENT" Ã¢â‚¬â€ Emergency Fund
 
 Respond with ONLY a JSON object:
 {"agent": "AGENT_NAME", "rewritten_query": "the user's message optimized for that agent"}
@@ -1301,14 +1301,14 @@ Respond with ONLY a JSON object:
 If unclear, respond: {"agent": "CLARIFY", "message": "your clarification question"}`;
 
 // ==================================================================
-// INTAKE QUESTIONS â€” Each agent asks these ONE BY ONE
+// INTAKE QUESTIONS Ã¢â‚¬â€ Each agent asks these ONE BY ONE
 // ==================================================================
 
 const AGENT_INTAKE_QUESTIONS = {
   'Financial Independence': [
     { key: 'fi_target_age', question: "What age would you like to achieve financial independence by? (When do you want work to be *optional*?)" },
     { key: 'fi_current_age', question: "How old are you currently?" },
-    { key: 'fi_current_investments', question: "Roughly how much do you currently have in investments? (401k, IRA, brokerage â€” a ballpark is fine)" },
+    { key: 'fi_current_investments', question: "Roughly how much do you currently have in investments? (401k, IRA, brokerage Ã¢â‚¬â€ a ballpark is fine)" },
     { key: 'fi_monthly_invest', question: "How much are you currently investing per month (across all accounts)?" },
     { key: 'fi_risk_tolerance', question: "What's your risk tolerance? **Conservative** (mostly bonds), **Moderate** (60/40 stocks/bonds), or **Aggressive** (90%+ stocks)?" },
     { key: 'fi_side_income', question: "Do you have any side income or passive income streams? If so, roughly how much per month?" },
@@ -1332,7 +1332,7 @@ const AGENT_INTAKE_QUESTIONS = {
   ],
 
   'Save for House': [
-    { key: 'house_target_price', question: "What price range are you looking at for a home? (Or what area â€” I can estimate)" },
+    { key: 'house_target_price', question: "What price range are you looking at for a home? (Or what area Ã¢â‚¬â€ I can estimate)" },
     { key: 'house_down_pct', question: "Are you targeting a **20% down payment** (avoids PMI) or a smaller down payment like **5-10%**?" },
     { key: 'house_timeline', question: "When are you hoping to buy? (e.g., 1 year, 2-3 years, 5+ years)" },
     { key: 'house_current_savings', question: "How much have you already saved specifically for the down payment?" },
@@ -1473,7 +1473,7 @@ app.post('/api/agent-memory/clear', (req, res) => {
 });
 
 // ==================================================================
-// MAIN CHAT ENDPOINT â€” Multi-Agent Router
+// MAIN CHAT ENDPOINT Ã¢â‚¬â€ Multi-Agent Router
 // ==================================================================
 
 app.post('/api/chat', async (req, res) => {
@@ -1485,7 +1485,7 @@ app.post('/api/chat', async (req, res) => {
   const agentPrompt = AGENT_PROMPTS[agentGoal];
 
   if (!agentPrompt) {
-    // No specific goal — use Agent Manager to route or give general advice
+    // No specific goal â€” use Agent Manager to route or give general advice
     return handleGeneralChat(req, res, message, apiKey, context, conversationHistory);
   }
   
@@ -1518,7 +1518,7 @@ app.post('/api/chat', async (req, res) => {
       justAnsweredKey = questions[0].key;
     }
   } else if (!isIntakeComplete && memories.length === 0) {
-    // First interaction â€” the user just selected the goal; the first question needs to be asked
+    // First interaction Ã¢â‚¬â€ the user just selected the goal; the first question needs to be asked
     justAnsweredKey = null; // No answer yet, just ask first question
   }
 
@@ -1538,11 +1538,11 @@ app.post('/api/chat', async (req, res) => {
     const totalCount = questions.length;
 
     if (answeredCount === 0) {
-      // First message — just ask the first question
+      // First message â€” just ask the first question
       intakeInstruction = `
-═══════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 THIS TURN'S INSTRUCTION (FOLLOW EXACTLY):
-═══════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 PHASE: INTAKE - Question 1 of ${totalCount}
 
 The user just selected "${agentGoal}" as their goal.
@@ -1558,15 +1558,15 @@ HARD RULES:
 - Do NOT ask multiple questions
 - Do NOT mention any other questions you'll ask later
 - Keep total response under 60 words
-═══════════════════════════════════════════════════════`;
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•`;
     } else {
-      // They answered a question — save it and ask the next one
+      // They answered a question â€” save it and ask the next one
       const nextQ = nextUnanswered;
       const prevQ = questions[answeredCount - 1];
       intakeInstruction = `
-═══════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 THIS TURN'S INSTRUCTION (FOLLOW EXACTLY):
-═══════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 PHASE: INTAKE - Question ${answeredCount + 1} of ${totalCount}
 
 The user just answered this question: "${prevQ.question}"
@@ -1581,20 +1581,20 @@ HARD RULES:
 - Do NOT ask multiple questions
 - Do NOT skip ahead
 - Keep total response under 40 words
-═══════════════════════════════════════════════════════`;
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•`;
     }
   } else {
-    // All questions answered — deliver the plan
+    // All questions answered â€” deliver the plan
     intakeInstruction = `
-═══════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 THIS TURN'S INSTRUCTION: DELIVER FULL PLAN
-═══════════════════════════════════════════════════════
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 All ${questions.length} intake questions have been answered!
 
 USER'S COLLECTED ANSWERS (use these to personalize):
 ${memories.map(m => {
   const qObj = questions.find(q => q.key === m.question_key);
-  return `• ${qObj ? qObj.question.split('?')[0] : m.question_key}: ${m.answer}`;
+  return `â€¢ ${qObj ? qObj.question.split('?')[0] : m.question_key}: ${m.answer}`;
 }).join('\n')}
 
 NOW CREATE A COMPREHENSIVE ACTION PLAN that includes:
@@ -1606,7 +1606,7 @@ NOW CREATE A COMPREHENSIVE ACTION PLAN that includes:
 6. ONE clear first action to take this week
 
 Use 200-300 words. Be specific with numbers from their data.
-═══════════════════════════════════════════════════════`;
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•`;
   }
 
   // ---- Step 6: Build full system prompt ----
@@ -1663,7 +1663,7 @@ ${memoryContext}`;
     //   }
     // } else if (userId && !isIntakeComplete && memories.length === 0) {
     //   // First question was just asked, user's message was the goal selection
-    //   // Don't save â€” the actual answer comes next turn
+    //   // Don't save Ã¢â‚¬â€ the actual answer comes next turn
     //   // BUT if the message is NOT the initial "My financial goal is..." message, save it
     //   if (!message.startsWith('My financial goal is:')) {
     //     saveMemory(userId, agentGoal, questions[0].key, message);
@@ -1708,7 +1708,7 @@ async function generateFullPlan(req, res, apiKey, context, agentGoal, agentPromp
   // Format the intake answers nicely
   const answersFormatted = Object.entries(intakeAnswers).map(([key, value]) => {
     const label = key.replace(/_/g, ' ').replace(/^(fi|ret|debt|house|ef)\s/i, '');
-    return `• ${label}: ${value}`;
+    return `â€¢ ${label}: ${value}`;
   }).join('\n');
 
   const planPrompt = `${agentPrompt}
@@ -1769,7 +1769,7 @@ async function handleGeneralChat(req, res, message, apiKey, context, conversatio
   const systemPrompt = `You are VisionFi AI, a friendly financial assistant. The user hasn't selected a specific goal yet.
 
 If they ask a general financial question, answer it concisely using their data.
-If they seem to have a specific goal, suggest they select one from: Financial Independence, Retirement, Debt Freedom, Save for House, or Emergency Fund â€” and explain that selecting a goal unlocks a personalized, step-by-step plan.
+If they seem to have a specific goal, suggest they select one from: Financial Independence, Retirement, Debt Freedom, Save for House, or Emergency Fund Ã¢â‚¬â€ and explain that selecting a goal unlocks a personalized, step-by-step plan.
 
 USER DATA:
 ${context}
@@ -2081,6 +2081,72 @@ app.get('/api/automations/vault/:userId', (req, res) => {
   res.json({ balance: vault[0]?.balance || 0, lastUpdated: vault[0]?.last_updated || null });
 });
 
+// ============================================================================
+// SHOPPING PLANNER API ENDPOINTS
+// Capital One inspired smart shopping with offers and budget integration
+// ============================================================================
+
+// Get all available offers
+app.get('/api/shopping/offers', (req, res) => {
+  const offers = [
+    { id: 'offer1', merchant: 'Whole Foods', category: 'Food & Dining', discount: 10, type: 'percent', minSpend: 50, maxCashback: 25, icon: '🛒', expires: '2026-02-28', featured: true, description: '10% back on groceries', cardRequired: 'Savor' },
+    { id: 'offer2', merchant: 'DoorDash', category: 'Food & Dining', discount: 5, type: 'flat', minSpend: 25, maxCashback: 5, icon: '🍔', expires: '2026-02-20', description: '$5 off $25+ orders', cardRequired: 'Any' },
+    { id: 'offer3', merchant: 'Starbucks', category: 'Food & Dining', discount: 15, type: 'percent', minSpend: 10, maxCashback: 5, icon: '☕', expires: '2026-02-15', featured: true, description: '15% back on coffee', cardRequired: 'Any' },
+    { id: 'offer5', merchant: 'Amazon', category: 'Shopping', discount: 5, type: 'percent', minSpend: 100, maxCashback: 50, icon: '📦', expires: '2026-03-15', featured: true, description: '5% back on Amazon', cardRequired: 'Venture' },
+    { id: 'offer6', merchant: 'Target', category: 'Shopping', discount: 10, type: 'percent', minSpend: 75, maxCashback: 30, icon: '🎯', expires: '2026-02-28', featured: true, description: '10% back at Target', cardRequired: 'Any' },
+    { id: 'offer10', merchant: 'Shell', category: 'Transport', discount: 10, type: 'cents_gallon', minSpend: 0, maxCashback: 20, icon: '⛽', expires: '2026-03-15', featured: true, description: '10¢/gallon off gas', cardRequired: 'Any' },
+    { id: 'offer11', merchant: 'Uber', category: 'Transport', discount: 25, type: 'percent', minSpend: 20, maxCashback: 15, icon: '🚗', expires: '2026-02-18', featured: true, description: '25% off rides', cardRequired: 'Venture' },
+    { id: 'offer16', merchant: 'Hotels.com', category: 'Travel', discount: 8, type: 'percent', minSpend: 200, maxCashback: 100, icon: '🏨', expires: '2026-06-30', featured: true, description: '8% back on hotels', cardRequired: 'Venture X' },
+  ];
+  res.json(offers);
+});
+
+// Get personalized offers based on user's spending history  
+app.get('/api/shopping/personalized/:userId', (req, res) => {
+  const uid = req.params.userId;
+  const transactions = query(`SELECT * FROM transactions WHERE user_id=? AND amount < 0 ORDER BY date DESC LIMIT 100`, [uid]);
+  
+  const merchantCounts = {};
+  const categoryTotals = {};
+  
+  transactions.forEach(tx => {
+    merchantCounts[tx.name] = (merchantCounts[tx.name] || 0) + 1;
+    categoryTotals[tx.category] = (categoryTotals[tx.category] || 0) + Math.abs(tx.amount);
+  });
+  
+  const topMerchants = Object.entries(merchantCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
+  const topCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).map(([name, total]) => ({ name, total }));
+  const totalSpending = transactions.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+  
+  res.json({ topMerchants, topCategories, totalSpending, transactionCount: transactions.length });
+});
+
+// Get budget-aware shopping recommendations
+app.get('/api/shopping/recommendations/:userId', (req, res) => {
+  const uid = req.params.userId;
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  
+  const monthlyTx = query(`SELECT category, SUM(ABS(amount)) as spent FROM transactions WHERE user_id=? AND amount < 0 AND date >= ? GROUP BY category`, [uid, startOfMonth]);
+  const budgets = query(`SELECT * FROM budgets WHERE user_id=?`, [uid]);
+  
+  const budgetStatus = budgets.map(b => {
+    const spent = monthlyTx.find(t => t.category === b.category)?.spent || 0;
+    return { category: b.category, budget: b.budget_amount, spent, remaining: b.budget_amount - spent, percentage: (spent / b.budget_amount) * 100 };
+  });
+  
+  res.json({ budgetStatus, flexibleCategories: budgetStatus.filter(b => b.percentage < 70).map(b => b.category) });
+});
+
+// Activate an offer
+app.post('/api/shopping/activate-offer', (req, res) => {
+  res.json({ success: true, message: 'Offer activated successfully', activatedAt: new Date().toISOString() });
+});
+
+// ============================================================================
+// END OF SHOPPING PLANNER ENDPOINTS
+// ============================================================================
+
 // Export API key for app.js
 app.get('/api/config', (req, res) => {
   res.json({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -2093,5 +2159,5 @@ app.get('/api/config', (req, res) => {
 app.get('/{*splat}', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 initDB().then(() => {
-  app.listen(process.env.PORT || 3000, () => console.log(`\n🚀 VisionFi → http://localhost:${process.env.PORT || 3000}\n   Users: alex@cmu.edu | sarah@gmail.com | jay@cmu.edu (pw: demo123)\n`));
+  app.listen(process.env.PORT || 3000, () => console.log(`\nðŸš€ VisionFi â†’ http://localhost:${process.env.PORT || 3000}\n   Users: alex@cmu.edu | sarah@gmail.com | jay@cmu.edu (pw: demo123)\n`));
 });

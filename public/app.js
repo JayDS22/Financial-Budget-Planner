@@ -53,6 +53,14 @@ let state={
   creditCommandData: null,
   showAutomationModal: false,
   showSmartFeaturesPanel: false,
+  // Shopping Planner State
+  shoppingSub: 'planner',
+  shoppingData: null,
+  shoppingLoading: false,
+  selectedOffer: null,
+  shoppingCart: [],
+  showOfferModal: false,
+  activeCategory: 'all',
 };
 
 // Export globals for automations.js
@@ -243,13 +251,14 @@ function renderAuth(){
 function renderSidebar(){
   var u=state.currentUser;if(!u)return'';
   var tabs=[
-    {id:'dashboard',l:'Dashboard',i:'📊'},
-    {id:'subscriptions',l:'Subscriptions',i:'📱'},
-    {id:'credit',l:'Credit & Loans',i:'💳'},
-    {id:'investments',l:'Investments',i:'📈'},
-    {id:'insights&predictions',l:'Insights & Predictions',i:'💡'},
-    {id:'learn',l:'Learn',i:'📖'}
-  ];
+      {id:'dashboard',l:'Dashboard',i:'📊'},
+      {id:'shopping',l:'Smart Shopping',i:'🛒'},
+      {id:'subscriptions',l:'Subscriptions',i:'📱'},
+      {id:'credit',l:'Credit & Loans',i:'💳'},
+      {id:'investments',l:'Investments',i:'📈'},
+      {id:'insights&predictions',l:'Insights & Predictions',i:'💡'},
+      {id:'learn',l:'Learn',i:'📖'}
+    ];
   
   var stats = (typeof getSmartFeatureStats === 'function') ? getSmartFeatureStats() : {activeCount: 0, totalSaved: 0};
   var activeCount = stats.activeCount;
@@ -855,6 +864,7 @@ function render(){
   else if(state.page==='app'){
     html=renderSidebar()+'<main class="main-content" style="margin-left:260px;padding:24px 28px;max-width:1060px">'+
       (state.tab==='dashboard'?renderDashboard():'')+
+      (state.tab==='shopping'?(typeof renderShoppingPlanner==='function'?renderShoppingPlanner():''):'')+
       (state.tab==='subscriptions'?renderSubscriptionHub():'')+
       (state.tab==='credit'?renderCredit():'')+
       (state.tab==='investments'?renderInvestments():'')+
