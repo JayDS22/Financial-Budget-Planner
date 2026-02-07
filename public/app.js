@@ -95,12 +95,25 @@ function showToast(m,t){
 window.showToast = showToast;  // ADD THIS LINE
 
 function set(u){
-  var isChatChange=u.chatOpen!==undefined||u.chatPhase!==undefined||u.chatMessages!==undefined;
-  Object.assign(state,u);
-  if(isChatChange&&u.chatOpen===true){
-    state.chatScrollNeeded=true;
+  var isChatOnlyChange = (u.chatOpen !== undefined || u.chatPhase !== undefined || 
+                          u.chatMessages !== undefined || u.chatSending !== undefined ||
+                          u.showApiSetup !== undefined) && 
+                         Object.keys(u).every(function(k) {
+                           return ['chatOpen','chatPhase','chatMessages','chatSending','showApiSetup','chatScrollNeeded','intakeStep','intakeAnswers','chatGoal'].indexOf(k) !== -1;
+                         });
+  
+  Object.assign(state, u);
+  
+  if (u.chatOpen === true) {
+    state.chatScrollNeeded = true;
   }
-  render();
+  
+  // Use optimized chat render if only chat state changed
+  if (isChatOnlyChange && state.page === 'app' && typeof renderChatContainer === 'function') {
+    renderChatContainer();
+  } else {
+    render();
+  }
 }
 
 // ========== CHART UTILITIES ==========
@@ -178,6 +191,47 @@ function renderAuth(){
   var isR=state.authMode==='register';
   return'<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;background:#F7F8FC"><div class="orb" style="background:#1A1F71;width:450px;height:450px;top:8%;left:8%;opacity:0.03"></div><div class="orb" style="background:#F7B600;width:380px;height:380px;top:48%;left:62%;opacity:0.05"></div><div style="width:100%;max-width:400px;position:relative;z-index:1;animation:fadeIn .5s"><div style="display:flex;align-items:center;gap:9px;margin-bottom:36px;justify-content:center;cursor:pointer" onclick="set({page:\'landing\'})"><div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1A1F71,#2E348F);font-size:17px;font-weight:700;color:#fff">V</div><span style="font-size:21px;font-weight:700;color:#1A1F71">VisionFi</span></div><div style="padding:28px;border-radius:16px;background:#FFFFFF;border:1px solid rgba(26,31,113,0.1);box-shadow:0 8px 32px rgba(26,31,113,0.08)"><h2 style="font-size:21px;font-weight:700;margin-bottom:22px;color:#1A1F71">'+(isR?'Create account':'Welcome back')+'</h2><div id="auth-error" class="err-msg"></div><form id="auth-form" style="display:flex;flex-direction:column;gap:12px">'+(isR?'<div><label class="label" style="color:#4A5090">Name</label><input class="input" id="auth-name" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71" required/></div>':'')+'<div><label class="label" style="color:#4A5090">Email</label><input class="input" id="auth-email" type="email" value="alex@cmu.edu" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71" required/></div><div><label class="label" style="color:#4A5090">Password</label><input class="input" id="auth-pass" type="password" value="demo123" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71" required/></div>'+(isR?'<div><label class="label" style="color:#4A5090">Income</label><input class="input" id="auth-income" type="number" placeholder="7500" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71"/></div>':'')+'<button type="submit" class="btn btn-p" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A1F71,#2E348F)">'+(isR?'Create Account':'Sign In')+'</button><p style="text-align:center;font-size:10px;color:#7A80B0;margin-top:4px">Demo: alex@cmu.edu / sarah@gmail.com / jay@cmu.edu (pw: demo123)</p></form></div><p style="text-align:center;margin-top:16px;font-size:12px;color:#7A80B0">'+(isR?'Have account? ':'No account? ')+'<span style="color:#1A1F71;font-weight:600;cursor:pointer" onclick="set({authMode:\''+(isR?'login':'register')+'\'})\">'+(isR?'Sign In':'Sign Up')+'</span></p></div></div>';
 }
+
+// ========== OPTIMIZED CHAT CONTAINER RENDER ==========
+function renderChatContainer() {
+  // Find or create chat container
+  var existingChat = document.querySelector('.chat-fab, .chat-window');
+  var chatHtml = renderChat();
+  
+  if (existingChat) {
+    // Create a temporary container to hold new chat elements
+    var temp = document.createElement('div');
+    temp.innerHTML = chatHtml;
+    
+    // Remove old chat elements
+    var oldFab = document.querySelector('.chat-fab');
+    var oldWindow = document.querySelector('.chat-window');
+    if (oldFab) oldFab.remove();
+    if (oldWindow) oldWindow.remove();
+    
+    // Append new chat elements to body
+    while (temp.firstChild) {
+      document.body.appendChild(temp.firstChild);
+    }
+  } else {
+    // Append chat to body
+    var temp = document.createElement('div');
+    temp.innerHTML = chatHtml;
+    while (temp.firstChild) {
+      document.body.appendChild(temp.firstChild);
+    }
+  }
+  
+  // Handle scroll if needed
+  if (state.chatScrollNeeded) {
+    state.chatScrollNeeded = false;
+    requestAnimationFrame(function() {
+      var cb = document.querySelector('.chat-body');
+      if (cb) cb.scrollTop = cb.scrollHeight;
+    });
+  }
+}
+window.renderChatContainer = renderChatContainer;
 
 function renderSidebar(){
   var u=state.currentUser;if(!u)return'';
