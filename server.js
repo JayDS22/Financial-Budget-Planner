@@ -58,10 +58,20 @@ async function initDB() {
   for (const uid of ['u1','u2','u3']) for (const c of cats) db.run(`INSERT INTO budgets VALUES(?,?,?,?)`, [uuidv4(),uid,...c]);
 
   // Subscriptions
-  const subs = [['Netflix',15.99,'🎬','2026-02-15'],['Spotify',10.99,'🎵','2026-02-12'],['iCloud+',2.99,'☁️','2026-02-20'],['Gym',49.99,'💪','2026-03-01'],['Adobe CC',54.99,'🎨','2026-02-18'],['ChatGPT Plus',20.00,'🤖','2026-02-22'],['AWS',32.50,'🖥️','2026-02-28'],['NYT',4.25,'📰','2026-02-10']];
-  for (const uid of ['u1','u2','u3']) for (const s of subs) db.run(`INSERT INTO subscriptions VALUES(?,?,?,?,?,?,?)`, [uuidv4(),uid,s[0],s[1],s[2],s[3],'active']);
-
-  // Credit Reports
+  // Subscriptions with varying usage patterns
+  const subs = [
+    ['Netflix',22.99,'🎬','2026-02-15','active'],      // Unused - cancel candidate
+    ['Spotify',16.99,'🎵','2026-02-12','active'],      // Active - keep
+    ['iCloud+',2.99,'☁️','2026-02-20','active'],       // Active - keep
+    ['Gym',49.99,'💪','2026-03-01','active'],          // Underused - review
+    ['Adobe CC',54.99,'🎨','2026-02-18','active'],     // Active - keep
+    ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'], // Active - keep
+    ['Hulu',15.99,'📺','2026-02-25','active'],         // Underused - review
+    ['NYT',17.00,'📰','2026-02-10','active']           // Unused - cancel candidate
+  ];
+  for (const uid of ['u1','u2','u3']) for (const s of subs) db.run(`INSERT INTO subscriptions VALUES(?,?,?,?,?,?,?)`, [uuidv4(),uid,s[0],s[1],s[2],s[3],s[4]]);
+    
+ // Credit Reports
   db.run(`INSERT INTO credit_reports VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ['cr1','u1',782,'Excellent',12,8,4,98,22.5,1,0,'2018-03-15',7.9,45000,10125,'2026-02-05']);
   db.run(`INSERT INTO credit_reports VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ['cr2','u2',694,'Good',8,5,3,94,38.2,3,0,'2020-06-20',5.6,28000,10696,'2026-02-05']);
   db.run(`INSERT INTO credit_reports VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ['cr3','u3',735,'Good',15,10,5,96,31.0,2,1,'2017-09-10',8.4,62000,19220,'2026-02-05']);
@@ -167,6 +177,212 @@ app.get('/api/dashboard/:userId', (req, res) => {
       loanCount:loans.length, cardCount:cards.length,
     },
     categoryBreakdown:budgets.map(b=>({category:b.category,budget:b.budget_amount,spent:Math.round(catSpend[b.category]||0)})),
+  });
+});
+
+// GET /api/subscriptions/analysis/:userId - Full subscription analysis
+app.get('/api/subscriptions/analysis/:userId', (req, res) => {
+  const uid = req.params.userId;
+  
+  // Get user's subscriptions
+  const subscriptions = query(`SELECT * FROM subscriptions WHERE user_id=?`, [uid]);
+  
+  // Get transactions to detect recurring patterns
+  const transactions = query(`SELECT * FROM transactions WHERE user_id=? ORDER BY date DESC`, [uid]);
+  
+  // Simulate usage data (in real app, would track actual usage)
+  const usageData = {
+    'Netflix': { lastUsed: 23, usesPerMonth: 2 },
+    'Spotify': { lastUsed: 1, usesPerMonth: 25 },
+    'iCloud+': { lastUsed: 0, usesPerMonth: 30 },
+    'Gym': { lastUsed: 8, usesPerMonth: 4 },
+    'Adobe CC': { lastUsed: 2, usesPerMonth: 15 },
+    'ChatGPT Plus': { lastUsed: 0, usesPerMonth: 20 },
+    'AWS': { lastUsed: 1, usesPerMonth: 30 },
+    'NYT': { lastUsed: 45, usesPerMonth: 0 },
+    'Hulu': { lastUsed: 18, usesPerMonth: 3 }
+  };
+  
+  // Analyze each subscription
+  const analyzed = subscriptions.map(sub => {
+    const usage = usageData[sub.name] || { lastUsed: Math.floor(Math.random() * 30), usesPerMonth: Math.floor(Math.random() * 15) };
+    const daysSinceUse = usage.lastUsed;
+    const usesPerMonth = usage.usesPerMonth;
+    
+    // Determine usage score
+    let usageScore, recommendation;
+    if (daysSinceUse > 30 || usesPerMonth === 0) {
+      usageScore = 'unused';
+      recommendation = 'cancel';
+    } else if (daysSinceUse > 14 || usesPerMonth < 3) {
+      usageScore = 'underused';
+      recommendation = 'review';
+    } else {
+      usageScore = 'active';
+      recommendation = 'keep';
+    }
+    
+    // Calculate cost per use
+    const costPerUse = usesPerMonth > 0 ? (sub.amount / usesPerMonth).toFixed(2) : null;
+    
+    // Calculate annual cost
+    const annualCost = sub.amount * 12;
+    
+    // Generate specific insight
+    let insight = '';
+    if (recommendation === 'cancel') {
+      insight = `No usage in ${daysSinceUse} days. Cancel to save $${annualCost.toFixed(2)}/year.`;
+    } else if (recommendation === 'review') {
+      insight = `Only ${usesPerMonth} uses/month. Consider downgrade or cancel.`;
+    } else {
+      insight = `Great value at $${costPerUse}/use. Keep it!`;
+    }
+    
+    return {
+      ...sub,
+      daysSinceUse,
+      usesPerMonth,
+      usageScore,
+      costPerUse: costPerUse ? parseFloat(costPerUse) : null,
+      annualCost: Math.round(annualCost * 100) / 100,
+      recommendation,
+      insight
+    };
+  });
+  
+  // Calculate health score (% of subscriptions that are "active")
+  const activeCount = analyzed.filter(s => s.usageScore === 'active').length;
+  const healthScore = analyzed.length > 0 ? Math.round((activeCount / analyzed.length) * 100) : 100;
+  
+  // Calculate potential savings
+  const potentialMonthlySavings = analyzed
+    .filter(s => s.recommendation !== 'keep')
+    .reduce((sum, s) => sum + s.amount, 0);
+  
+  const potentialAnnualSavings = potentialMonthlySavings * 12;
+  
+  // Detect recurring transactions that might be subscriptions
+  const detectedRecurring = detectRecurringCharges(transactions, subscriptions);
+  
+  // Sort: cancel first, then review, then keep
+  const sortOrder = { cancel: 0, review: 1, keep: 2 };
+  analyzed.sort((a, b) => sortOrder[a.recommendation] - sortOrder[b.recommendation]);
+  
+  res.json({
+    subscriptions: analyzed,
+    detectedRecurring,
+    healthScore,
+    potentialMonthlySavings: Math.round(potentialMonthlySavings * 100) / 100,
+    potentialAnnualSavings: Math.round(potentialAnnualSavings * 100) / 100,
+    stats: {
+      total: analyzed.length,
+      active: activeCount,
+      underused: analyzed.filter(s => s.usageScore === 'underused').length,
+      unused: analyzed.filter(s => s.usageScore === 'unused').length,
+      totalMonthly: Math.round(analyzed.reduce((sum, s) => sum + s.amount, 0) * 100) / 100
+    }
+  });
+});
+
+// Helper: Detect recurring charges from transactions
+function detectRecurringCharges(transactions, existingSubscriptions) {
+  const existingNames = existingSubscriptions.map(s => s.name.toLowerCase());
+  const patterns = {};
+  
+  // Group transactions by name and amount
+  transactions.filter(tx => tx.amount < 0).forEach(tx => {
+    const key = `${tx.name.toLowerCase()}_${Math.abs(tx.amount).toFixed(2)}`;
+    if (!patterns[key]) {
+      patterns[key] = {
+        name: tx.name,
+        amount: Math.abs(tx.amount),
+        dates: [],
+        category: tx.category
+      };
+    }
+    patterns[key].dates.push(new Date(tx.date));
+  });
+  
+  const detected = [];
+  
+  Object.values(patterns).forEach(p => {
+    // Skip if already in subscriptions
+    if (existingNames.includes(p.name.toLowerCase())) return;
+    
+    if (p.dates.length >= 2) {
+      p.dates.sort((a, b) => a - b);
+      
+      // Check if roughly monthly (25-35 days apart)
+      const gaps = [];
+      for (let i = 1; i < p.dates.length; i++) {
+        gaps.push((p.dates[i] - p.dates[i-1]) / (1000 * 60 * 60 * 24));
+      }
+      
+      if (gaps.length > 0) {
+        const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+        
+        if (avgGap >= 25 && avgGap <= 35) {
+          detected.push({
+            name: p.name,
+            amount: p.amount,
+            frequency: 'monthly',
+            occurrences: p.dates.length,
+            category: p.category,
+            suggestion: 'This looks like a subscription. Add it to track?'
+          });
+        }
+      }
+    }
+  });
+  
+  return detected;
+}
+
+// POST /api/subscriptions/action - Handle subscription actions
+app.post('/api/subscriptions/action', (req, res) => {
+  const { userId, subscriptionId, action } = req.body;
+  
+  if (!userId || !subscriptionId || !action) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  
+  // Get the subscription
+  const sub = query(`SELECT * FROM subscriptions WHERE id=? AND user_id=?`, [subscriptionId, userId]);
+  if (!sub.length) {
+    return res.status(404).json({ error: 'Subscription not found' });
+  }
+  
+  const subscription = sub[0];
+  let message = '';
+  let savings = 0;
+  
+  switch (action) {
+    case 'cancel':
+      db.run(`UPDATE subscriptions SET status='cancelled' WHERE id=?`, [subscriptionId]);
+      savings = subscription.amount * 12;
+      message = `${subscription.name} cancelled! You'll save $${savings.toFixed(2)}/year.`;
+      break;
+      
+    case 'pause':
+      db.run(`UPDATE subscriptions SET status='paused' WHERE id=?`, [subscriptionId]);
+      savings = subscription.amount * 3; // Assume 3 month pause
+      message = `${subscription.name} paused. Estimated savings: $${savings.toFixed(2)} over 3 months.`;
+      break;
+      
+    case 'keep':
+      db.run(`UPDATE subscriptions SET status='active' WHERE id=?`, [subscriptionId]);
+      message = `${subscription.name} marked as keeper!`;
+      break;
+      
+    default:
+      return res.status(400).json({ error: 'Invalid action' });
+  }
+  
+  res.json({
+    success: true,
+    message,
+    savings: Math.round(savings * 100) / 100,
+    newStatus: action === 'cancel' ? 'cancelled' : action === 'pause' ? 'paused' : 'active'
   });
 });
 

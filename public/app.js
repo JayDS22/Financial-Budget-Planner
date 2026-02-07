@@ -33,7 +33,10 @@ let state={
   chatAgentState:null,
   intakeStep:0,
   intakeAnswers:{},
-  chatScrollNeeded:false
+  chatScrollNeeded:false,
+  subscriptionAnalysis: null,
+  subscriptionTab: 'hub',
+  showKeepSubs: false,
 };
 
 let apiKey=localStorage.getItem('visionfi_api_key')||'';
@@ -165,7 +168,14 @@ function renderAuth(){
 
 function renderSidebar(){
   var u=state.currentUser;if(!u)return'';
-  var tabs=[{id:'dashboard',l:'Dashboard',i:'📊'},{id:'credit',l:'Credit & Loans',i:'💳'},{id:'investments',l:'Investments',i:'📈'},{id:'insights',l:'Insights',i:'💡'},{id:'predictions',l:'Predictions',i:'🔮'}];
+  var tabs=[
+    {id:'dashboard',l:'Dashboard',i:'📊'},
+    {id:'subscriptions',l:'Subscriptions',i:'💳'},  // ADD THIS LINE
+    {id:'credit',l:'Credit & Loans',i:'💳'},
+    {id:'investments',l:'Investments',i:'📈'},
+    {id:'insights',l:'Insights',i:'💡'},
+    {id:'predictions',l:'Predictions',i:'🔮'}
+  ];
   return'<div class="sidebar" style="width:240px;min-height:100vh;background:var(--bg1);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:16px 10px;position:fixed;left:0;top:0;z-index:50"><div style="display:flex;align-items:center;gap:8;padding:7px 11px;margin-bottom:26px"><div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:14px;font-weight:700;color:#fff">V</div><span style="font-size:16px;font-weight:700">VisionFi</span></div><div style="flex:1;display:flex;flex-direction:column;gap:2px">'+tabs.map(function(t){return'<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:9;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(state.tab===t.id?'var(--blue-g)':'transparent')+';color:'+(state.tab===t.id?'var(--blue)':'var(--t2)')+';font-size:13px;font-weight:'+(state.tab===t.id?600:400)+';font-family:inherit"><span>'+t.i+'</span>'+t.l+'</button>'}).join('')+'</div><div style="position:relative"><div id="user-menu" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:5px;background:var(--bg3);border:1px solid var(--bd2);border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'+state.users.map(function(usr){return'<button onclick="switchUser(\''+usr.id+'\')" style="display:flex;align-items:center;gap:8;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:'+(usr.id===u.id?'var(--blue-g)':'transparent')+';color:var(--t1);font-size:11px;text-align:left;font-family:inherit"><span style="font-size:17px">'+usr.avatar+'</span><div><div style="font-weight:500">'+usr.name+'</div><div style="font-size:9px;color:var(--t3)">'+(usr.tier==='premium'?'★ Premium':'Free')+'</div></div></button>'}).join('')+'<div style="height:1px;background:var(--bd);margin:4px 0"></div><button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:7;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:transparent;color:var(--red);font-size:11px;text-align:left;font-family:inherit">🚪 Sign Out</button></div><button onclick="var m=document.getElementById(\'user-menu\');m.style.display=m.style.display===\'block\'?\'none\':\'block\'" style="display:flex;align-items:center;gap:8;padding:9px;border-radius:10px;border:1px solid var(--bd);cursor:pointer;width:100%;background:var(--bg2);color:var(--t1);text-align:left;font-family:inherit"><span style="font-size:20px">'+u.avatar+'</span><div style="flex:1"><div style="font-size:11px;font-weight:600">'+u.name+'</div><div style="font-size:9px;color:var(--t3)">'+(u.tier==='premium'?'★ Premium':'Free')+'</div></div><span style="color:var(--t3)">▾</span></button></div></div>';
 }
 
@@ -316,6 +326,318 @@ function renderModal(){
   return'<div class="modal-overlay" onclick="if(event.target===this)set({showAddTx:false})"><div class="modal"><h2 style="font-size:18px;font-weight:700;margin-bottom:16px">Add Transaction</h2><form id="tx-form" style="display:flex;flex-direction:column;gap:12px"><div><label class="label">Description</label><input class="input" id="tx-name" required/></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><div><label class="label">Amount</label><input class="input" id="tx-amount" type="number" step="0.01" required/></div><div><label class="label">Category</label><select class="input" id="tx-cat">'+['Food & Dining','Transport','Entertainment','Shopping','Subscriptions','Healthcare','Utilities','Housing','Income'].map(function(c){return'<option>'+c+'</option>'}).join('')+'</select></div></div><div><label class="label">Date</label><input class="input" id="tx-date" type="date" value="2026-02-05"/></div><div style="display:flex;gap:8px"><button type="submit" class="btn btn-p" style="flex:1">Add</button><button type="button" class="btn btn-g" style="flex:1" onclick="set({showAddTx:false})">Cancel</button></div></form></div></div>';
 }
 
+// Load subscription analysis data
+async function loadSubscriptionAnalysis() {
+  if (!state.currentUser) return;
+  try {
+    state.subscriptionAnalysis = await api('GET', '/api/subscriptions/analysis/' + state.currentUser.id);
+    render();
+  } catch (e) {
+    console.error('Failed to load subscription analysis:', e);
+  }
+}
+window.loadSubscriptionAnalysis = loadSubscriptionAnalysis;
+
+// Main Subscription Hub render function - IMPROVED VERSION
+function renderSubscriptionHub() {
+  var d = state.dashData;
+  var analysis = state.subscriptionAnalysis;
+  
+  if (!d) return '<div class="card">Loading...</div>';
+  
+  // If no analysis loaded yet, trigger load and show loading state
+  if (!analysis) {
+    loadSubscriptionAnalysis();
+    return '<div style="animation:fadeIn .35s">' +
+      '<h1 style="font-size:24px;font-weight:700;margin-bottom:20px">💳 Subscription Intelligence</h1>' +
+      '<div class="card" style="padding:60px;text-align:center">' +
+        '<div style="font-size:32px;margin-bottom:16px;animation:pulse 1.5s infinite">🔍</div>' +
+        '<div style="font-size:16px;font-weight:600;margin-bottom:8px">Analyzing your subscriptions...</div>' +
+        '<div style="font-size:13px;color:var(--t3)">Finding savings opportunities</div>' +
+      '</div>' +
+    '</div>';
+  }
+  
+  var stats = analysis.stats;
+  var healthScore = analysis.healthScore;
+  var subs = analysis.subscriptions;
+  
+  // Health score color and status
+  var scoreColor = healthScore >= 70 ? '#3ddba0' : healthScore >= 40 ? '#ffb84d' : '#ff6b6b';
+  var scoreBg = healthScore >= 70 ? 'rgba(61,219,160,0.15)' : healthScore >= 40 ? 'rgba(255,184,77,0.15)' : 'rgba(255,107,107,0.15)';
+  var scoreLabel = healthScore >= 70 ? 'Healthy' : healthScore >= 40 ? 'Needs Attention' : 'Poor';
+  var scoreEmoji = healthScore >= 70 ? '✨' : healthScore >= 40 ? '⚠️' : '🚨';
+  
+  // Group subscriptions
+  var cancelSubs = subs.filter(function(s) { return s.recommendation === 'cancel'; });
+  var reviewSubs = subs.filter(function(s) { return s.recommendation === 'review'; });
+  var keepSubs = subs.filter(function(s) { return s.recommendation === 'keep'; });
+  
+  // Calculate group totals
+  var cancelTotal = cancelSubs.reduce(function(sum, s) { return sum + s.amount; }, 0);
+  var reviewTotal = reviewSubs.reduce(function(sum, s) { return sum + s.amount; }, 0);
+  var keepTotal = keepSubs.reduce(function(sum, s) { return sum + s.amount; }, 0);
+  
+  // SVG Circular Gauge
+  var gaugeSize = 140;
+  var strokeWidth = 12;
+  var radius = (gaugeSize - strokeWidth) / 2;
+  var circumference = 2 * Math.PI * radius;
+  var progress = (healthScore / 100) * circumference;
+  var dashOffset = circumference - progress;
+  
+  return '<div style="animation:fadeIn .35s">' +
+    
+    // Header
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
+      '<h1 style="font-size:24px;font-weight:700">💳 Subscription Intelligence</h1>' +
+      '<button class="btn btn-g btn-sm" onclick="state.subscriptionAnalysis=null;loadSubscriptionAnalysis()" style="font-size:11px">🔄 Refresh</button>' +
+    '</div>' +
+    
+    // Top Section: Health Score + Stats
+    '<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:16px;margin-bottom:20px">' +
+      
+      // Health Score Card with Circular Gauge
+      '<div class="card" style="padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:' + scoreBg + ';border:1px solid ' + scoreColor + '33">' +
+        '<div style="position:relative;width:' + gaugeSize + 'px;height:' + gaugeSize + 'px">' +
+          '<svg width="' + gaugeSize + '" height="' + gaugeSize + '" style="transform:rotate(-90deg)">' +
+            '<circle cx="' + (gaugeSize/2) + '" cy="' + (gaugeSize/2) + '" r="' + radius + '" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="' + strokeWidth + '"/>' +
+            '<circle cx="' + (gaugeSize/2) + '" cy="' + (gaugeSize/2) + '" r="' + radius + '" fill="none" stroke="' + scoreColor + '" stroke-width="' + strokeWidth + '" stroke-linecap="round" stroke-dasharray="' + circumference + '" stroke-dashoffset="' + dashOffset + '" style="transition:stroke-dashoffset 1s ease-out"/>' +
+          '</svg>' +
+          '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center">' +
+            '<div style="font-size:36px;font-weight:800;color:' + scoreColor + ';line-height:1">' + healthScore + '</div>' +
+            '<div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px">Score</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin-top:12px;text-align:center">' +
+          '<div style="font-size:14px;font-weight:600;color:' + scoreColor + '">' + scoreEmoji + ' ' + scoreLabel + '</div>' +
+        '</div>' +
+      '</div>' +
+      
+      // Stats & Breakdown
+      '<div class="card" style="padding:20px">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;height:100%">' +
+          
+          // Left: Breakdown
+          '<div>' +
+            '<div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">📊 Breakdown</div>' +
+            '<div style="display:flex;flex-direction:column;gap:8px">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<span style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green)"></span> Active</span>' +
+                '<span style="font-size:14px;font-weight:700">' + stats.active + '</span>' +
+              '</div>' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<span style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:var(--yellow)"></span> Review</span>' +
+                '<span style="font-size:14px;font-weight:700">' + stats.underused + '</span>' +
+              '</div>' +
+              '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<span style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red)"></span> Cancel</span>' +
+                '<span style="font-size:14px;font-weight:700">' + stats.unused + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          
+          // Right: Savings
+          '<div style="border-left:1px solid var(--bd);padding-left:16px">' +
+            '<div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">💰 Spending</div>' +
+            '<div style="margin-bottom:12px">' +
+              '<div style="font-size:11px;color:var(--t3)">Monthly</div>' +
+              '<div style="font-size:20px;font-weight:700">$' + stats.totalMonthly.toFixed(2) + '</div>' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-size:11px;color:var(--t3)">Potential Savings</div>' +
+              '<div style="font-size:20px;font-weight:700;color:var(--green)">$' + analysis.potentialMonthlySavings.toFixed(2) + '<span style="font-size:12px;font-weight:400">/mo</span></div>' +
+            '</div>' +
+          '</div>' +
+          
+        '</div>' +
+      '</div>' +
+      
+    '</div>' +
+    
+    // Action Required Section (Cancel)
+    (cancelSubs.length > 0 ? 
+      '<div class="card" style="margin-bottom:16px;border:1px solid rgba(255,107,107,0.3)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            '<span style="font-size:16px">🔴</span>' +
+            '<span style="font-size:14px;font-weight:600;color:var(--red)">Action Required</span>' +
+            '<span style="font-size:12px;color:var(--t3)">(' + cancelSubs.length + ' subscriptions)</span>' +
+          '</div>' +
+          '<div style="font-size:13px;color:var(--red);font-weight:600">Save $' + cancelTotal.toFixed(2) + '/mo</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">' +
+          cancelSubs.map(function(sub) { return renderCompactSubRow(sub, 'cancel'); }).join('') +
+        '</div>' +
+      '</div>' : '') +
+    
+    // Review Section
+    (reviewSubs.length > 0 ? 
+      '<div class="card" style="margin-bottom:16px;border:1px solid rgba(255,184,77,0.3)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            '<span style="font-size:16px">🟡</span>' +
+            '<span style="font-size:14px;font-weight:600;color:var(--yellow)">Review Recommended</span>' +
+            '<span style="font-size:12px;color:var(--t3)">(' + reviewSubs.length + ' subscriptions)</span>' +
+          '</div>' +
+          '<div style="font-size:13px;color:var(--t2)">$' + reviewTotal.toFixed(2) + '/mo</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">' +
+          reviewSubs.map(function(sub) { return renderCompactSubRow(sub, 'review'); }).join('') +
+        '</div>' +
+      '</div>' : '') +
+    
+    // Good Value Section (Collapsible)
+    (keepSubs.length > 0 ? 
+      '<div class="card" style="margin-bottom:16px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleKeepSubs()">' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            '<span style="font-size:16px">🟢</span>' +
+            '<span style="font-size:14px;font-weight:600;color:var(--green)">Good Value</span>' +
+            '<span style="font-size:12px;color:var(--t3)">(' + keepSubs.length + ' subscriptions · $' + keepTotal.toFixed(2) + '/mo)</span>' +
+          '</div>' +
+          '<span style="color:var(--t3);font-size:12px" id="keep-toggle-icon">' + (state.showKeepSubs ? '▼ Hide' : '▶ Show') + '</span>' +
+        '</div>' +
+        '<div id="keep-subs-list" style="display:' + (state.showKeepSubs ? 'flex' : 'none') + ';flex-direction:column;gap:8px;margin-top:14px">' +
+          keepSubs.map(function(sub) { return renderCompactSubRow(sub, 'keep'); }).join('') +
+        '</div>' +
+      '</div>' : '') +
+    
+    // Bottom Summary Banner
+    (analysis.potentialAnnualSavings > 0 ?
+      '<div style="padding:20px;border-radius:14px;background:linear-gradient(135deg,rgba(61,219,160,0.2),rgba(91,140,255,0.1));border:1px solid rgba(61,219,160,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">' +
+        '<div>' +
+          '<div style="font-size:16px;font-weight:700;color:var(--green);margin-bottom:4px">🎉 You could save $' + analysis.potentialAnnualSavings.toFixed(2) + ' this year!</div>' +
+          '<div style="font-size:13px;color:var(--t2)">Cancel or pause ' + (cancelSubs.length + reviewSubs.length) + ' unused subscriptions to keep more money</div>' +
+        '</div>' +
+        '<button class="btn btn-p" style="padding:12px 24px" onclick="cancelAllUnused()">Cancel All Unused</button>' +
+      '</div>' : 
+      '<div style="padding:20px;border-radius:14px;background:linear-gradient(135deg,rgba(61,219,160,0.2),rgba(91,140,255,0.1));border:1px solid rgba(61,219,160,0.3);text-align:center">' +
+        '<div style="font-size:16px;font-weight:700;color:var(--green)">🎉 Great job! All your subscriptions are well-used.</div>' +
+      '</div>') +
+    
+  '</div>';
+}
+
+// Compact subscription row
+function renderCompactSubRow(sub, type) {
+  var bgColor = type === 'cancel' ? 'rgba(255,107,107,0.08)' : type === 'review' ? 'rgba(255,184,77,0.08)' : 'rgba(61,219,160,0.08)';
+  var accentColor = type === 'cancel' ? 'var(--red)' : type === 'review' ? 'var(--yellow)' : 'var(--green)';
+  
+  return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;background:' + bgColor + ';gap:12px;flex-wrap:wrap">' +
+    
+    // Left: Icon + Name + Price
+    '<div style="display:flex;align-items:center;gap:12px;min-width:200px">' +
+      '<span style="font-size:20px">' + sub.icon + '</span>' +
+      '<div>' +
+        '<div style="font-size:13px;font-weight:600">' + sub.name + '</div>' +
+        '<div style="font-size:11px;color:var(--t3)">$' + sub.amount.toFixed(2) + '/mo</div>' +
+      '</div>' +
+    '</div>' +
+    
+    // Middle: Usage Info
+    '<div style="display:flex;align-items:center;gap:16px;flex:1;justify-content:center">' +
+      '<div style="text-align:center">' +
+        '<div style="font-size:12px;font-weight:600;color:' + accentColor + '">' + 
+          (sub.daysSinceUse === 0 ? 'Today' : sub.daysSinceUse + 'd ago') + 
+        '</div>' +
+        '<div style="font-size:9px;color:var(--t3)">Last used</div>' +
+      '</div>' +
+      (sub.costPerUse ? 
+        '<div style="text-align:center">' +
+          '<div style="font-size:12px;font-weight:600">$' + sub.costPerUse.toFixed(2) + '</div>' +
+          '<div style="font-size:9px;color:var(--t3)">Per use</div>' +
+        '</div>' : '') +
+      '<div style="text-align:center">' +
+        '<div style="font-size:12px;font-weight:600">$' + sub.annualCost.toFixed(0) + '</div>' +
+        '<div style="font-size:9px;color:var(--t3)">Per year</div>' +
+      '</div>' +
+    '</div>' +
+    
+    // Right: Action Buttons
+    '<div style="display:flex;gap:6px">' +
+      (type !== 'keep' ? 
+        '<button onclick="subscriptionAction(\'' + sub.id + '\',\'cancel\')" style="padding:6px 12px;border-radius:6px;border:none;background:rgba(255,107,107,0.2);color:var(--red);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,107,107,0.4)\'" onmouseout="this.style.background=\'rgba(255,107,107,0.2)\'">Cancel</button>' +
+        '<button onclick="subscriptionAction(\'' + sub.id + '\',\'pause\')" style="padding:6px 12px;border-radius:6px;border:none;background:rgba(255,184,77,0.2);color:var(--yellow);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,184,77,0.4)\'" onmouseout="this.style.background=\'rgba(255,184,77,0.2)\'">Pause</button>' +
+        '<button onclick="subscriptionAction(\'' + sub.id + '\',\'keep\')" style="padding:6px 12px;border-radius:6px;border:none;background:rgba(61,219,160,0.2);color:var(--green);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background=\'rgba(61,219,160,0.4)\'" onmouseout="this.style.background=\'rgba(61,219,160,0.2)\'">Keep</button>' :
+        '<span style="padding:6px 12px;border-radius:6px;background:rgba(61,219,160,0.2);color:var(--green);font-size:11px;font-weight:600">✓ Great value</span>') +
+    '</div>' +
+    
+  '</div>';
+}
+
+// Toggle keep subscriptions visibility
+function toggleKeepSubs() {
+  state.showKeepSubs = !state.showKeepSubs;
+  render();
+}
+window.toggleKeepSubs = toggleKeepSubs;
+
+// Cancel all unused subscriptions
+async function cancelAllUnused() {
+  if (!state.subscriptionAnalysis) return;
+  
+  var toCancel = state.subscriptionAnalysis.subscriptions.filter(function(s) {
+    return s.recommendation === 'cancel';
+  });
+  
+  if (toCancel.length === 0) {
+    showToast('No subscriptions to cancel!', 'info');
+    return;
+  }
+  
+  var confirmMsg = 'Cancel ' + toCancel.length + ' subscription(s)?\n\n' + 
+    toCancel.map(function(s) { return '• ' + s.name + ' ($' + s.amount.toFixed(2) + '/mo)'; }).join('\n') +
+    '\n\nTotal savings: $' + toCancel.reduce(function(sum, s) { return sum + s.amount; }, 0).toFixed(2) + '/mo';
+  
+  if (!confirm(confirmMsg)) return;
+  
+  // Cancel each one
+  for (var i = 0; i < toCancel.length; i++) {
+    try {
+      await api('POST', '/api/subscriptions/action', {
+        userId: state.currentUser.id,
+        subscriptionId: toCancel[i].id,
+        action: 'cancel'
+      });
+    } catch (e) {
+      console.error('Failed to cancel ' + toCancel[i].name, e);
+    }
+  }
+  
+  showToast('🎉 Cancelled ' + toCancel.length + ' subscriptions!', 'success');
+  
+  // Reload
+  await loadDashboard(state.currentUser.id);
+  state.subscriptionAnalysis = null;
+  await loadSubscriptionAnalysis();
+}
+window.cancelAllUnused = cancelAllUnused;
+
+// Handle subscription actions (cancel, pause, keep)
+async function subscriptionAction(subId, action) {
+  if (!state.currentUser) return;
+  
+  try {
+    var result = await api('POST', '/api/subscriptions/action', {
+      userId: state.currentUser.id,
+      subscriptionId: subId,
+      action: action
+    });
+    
+    showToast(result.message, 'success');
+    
+    // Reload both dashboard and subscription analysis
+    await loadDashboard(state.currentUser.id);
+    state.subscriptionAnalysis = null;
+    await loadSubscriptionAnalysis();
+    
+  } catch (e) {
+    showToast('Action failed: ' + e.message, 'error');
+  }
+}
+window.subscriptionAction = subscriptionAction;
+
 // ========== MAIN RENDER ==========
 function render(){
   var root=document.getElementById('root');
@@ -326,12 +648,13 @@ function render(){
   else if(state.page==='app'){
     html=renderSidebar()+'<main class="main-content" style="margin-left:240px;padding:24px 28px;max-width:1060px">'+
       (state.tab==='dashboard'?renderDashboard():'')+
+      (state.tab==='subscriptions'?renderSubscriptionHub():'')+  // ADD THIS LINE
       (state.tab==='credit'?renderCredit():'')+
       (state.tab==='investments'?renderInvestments():'')+
       (state.tab==='insights'?renderInsights():'')+
       (state.tab==='predictions'?renderPredictions():'')+
-    '</main>'+renderBriefing()+renderChat()+renderModal();  // <-- MOVE renderBriefing() HERE
-}
+    '</main>'+renderBriefing()+renderChat()+renderModal();
+  }
   
   root.innerHTML=html;
   
