@@ -159,15 +159,15 @@ async function initDB() {
 
   // Credit Cards
   const cards = [
-    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','✈️'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','🏨'],
-    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','🛒'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','🏪'],
-    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','⛽'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','🍎'],
-    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','🎯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','🍔'],
-    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','📦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','💄'],
-    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','🛒'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','👗'],
-    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','🏨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','🍷'],
-    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','👜'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','💻'],
-    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','🛒'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','🔨'],
+    ['cc1','u1','Sapphire Preferred','Chase','Visa',15000,3200,85,21.49,'2026-02-20','Travel Points',2.0,'active','4821'],
+    ['cc2','u1','Blue Cash Preferred','Amex','Amex',20000,4500,120,19.99,'2026-02-25','Cashback',6.0,'active','3045'],
+    ['cc3','u1','Freedom Unlimited','Chase','Visa',10000,2425,65,20.49,'2026-02-18','Cashback',1.5,'active','9912'],
+    ['cc4','u2','Quicksilver','Capital One','Visa',12000,4200,110,24.99,'2026-02-22','Cashback',1.5,'active','7733'],
+    ['cc5','u2','Discover It','Discover','Discover',8000,3100,82,22.49,'2026-02-15','Cashback',5.0,'active','1188'],
+    ['cc6','u2','Double Cash','Citi','Mastercard',8000,3396,90,18.49,'2026-02-28','Cashback',2.0,'active','5540'],
+    ['cc7','u3','Sapphire Reserve','Chase','Visa',25000,6800,180,24.49,'2026-02-20','Travel Points',3.0,'active','2299'],
+    ['cc8','u3','Platinum Card','Amex','Amex',30000,8500,225,22.99,'2026-02-25','Travel Points',5.0,'active','1001'],
+    ['cc9','u3','Venture X','Capital One','Visa',20000,3920,105,21.99,'2026-02-18','Travel Miles',2.0,'active','6654'],
   ];
   for (const c of cards) db.run(`INSERT INTO credit_cards VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, c);
 
@@ -185,15 +185,15 @@ async function initDB() {
 
   // Credit spending
   const ccs = [
-    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','âœˆï¸'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','ðŸ¨'],
-    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','ðŸ›’'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','ðŸª'],
-    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','â›½'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','ðŸŽ'],
-    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','ðŸŽ¯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','ðŸ”'],
-    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','ðŸ“¦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','ðŸ’„'],
-    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','ðŸ›’'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','ðŸ‘—'],
-    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','ðŸ¨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','ðŸ·'],
-    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','ðŸ‘œ'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','ðŸ’»'],
-    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','ðŸ›’'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','ðŸ”¨'],
+    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','✈️'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','🏨'],
+    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','🛒'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','🏪'],
+    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','⛽'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','🍎'],
+    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','🎯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','🍔'],
+    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','📦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','💄'],
+    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','🛒'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','👗'],
+    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','🏨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','🍷'],
+    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','👜'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','💻'],
+    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','🛒'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','🔨'],
   ];
   for (const s of ccs) db.run(`INSERT INTO credit_spending VALUES(?,?,?,?,?,?,?,?)`, [uuidv4(),...s]);
 
