@@ -57,20 +57,44 @@ async function initDB() {
   const cats = [['Housing',2200],['Food & Dining',800],['Transport',450],['Entertainment',300],['Shopping',500],['Subscriptions',120],['Healthcare',200],['Utilities',280]];
   for (const uid of ['u1','u2','u3']) for (const c of cats) db.run(`INSERT INTO budgets VALUES(?,?,?,?)`, [uuidv4(),uid,...c]);
 
-  // Subscriptions
-  // Subscriptions with varying usage patterns
-  const subs = [
-    ['Netflix',22.99,'🎬','2026-02-15','active'],      // Unused - cancel candidate
-    ['Spotify',16.99,'🎵','2026-02-12','active'],      // Active - keep
-    ['iCloud+',2.99,'☁️','2026-02-20','active'],       // Active - keep
-    ['Gym',49.99,'💪','2026-03-01','active'],          // Underused - review
-    ['Adobe CC',54.99,'🎨','2026-02-18','active'],     // Active - keep
-    ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'], // Active - keep
-    ['Hulu',15.99,'📺','2026-02-25','active'],         // Underused - review
-    ['NYT',17.00,'📰','2026-02-10','active']           // Unused - cancel candidate
-  ];
-  for (const uid of ['u1','u2','u3']) for (const s of subs) db.run(`INSERT INTO subscriptions VALUES(?,?,?,?,?,?,?)`, [uuidv4(),uid,s[0],s[1],s[2],s[3],s[4]]);
-    
+  // Subscriptions - Different for each user for realistic demo
+  const userSubs = {
+    'u1': [ // Alex - Tech professional
+      ['Netflix',22.99,'🎬','2026-02-15','active'],
+      ['Spotify',16.99,'🎵','2026-02-12','active'],
+      ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'],
+      ['AWS',32.50,'🖥️','2026-02-28','active'],
+      ['Adobe CC',54.99,'🎨','2026-02-18','active'],
+      ['NYT',17.00,'📰','2026-02-10','active'],
+      ['GitHub Pro',7.00,'💻','2026-02-20','active'],
+      ['iCloud+',2.99,'☁️','2026-02-20','active']
+    ],
+    'u2': [ // Sarah - Student/Researcher  
+      ['Spotify',10.99,'🎵','2026-02-12','active'],
+      ['Netflix',15.99,'🎬','2026-02-15','active'],
+      ['Hulu',15.99,'📺','2026-02-25','active'],
+      ['Gym',49.99,'💪','2026-03-01','active'],
+      ['iCloud+',2.99,'☁️','2026-02-20','active'],
+      ['Notion',10.00,'📝','2026-02-18','active']
+    ],
+    'u3': [ // Jay - Premium user
+      ['Netflix',22.99,'🎬','2026-02-15','active'],
+      ['Spotify Family',16.99,'🎵','2026-02-12','active'],
+      ['HBO Max',15.99,'🎥','2026-02-20','active'],
+      ['Adobe CC',54.99,'🎨','2026-02-18','active'],
+      ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'],
+      ['Gym',79.99,'💪','2026-03-01','active'],
+      ['WSJ',38.99,'📰','2026-02-10','active'],
+      ['iCloud+',9.99,'☁️','2026-02-20','active'],
+      ['Disney+',13.99,'🏰','2026-02-25','active']
+    ]
+  };
+
+  for (const uid of Object.keys(userSubs)) {
+    for (const s of userSubs[uid]) {
+      db.run(`INSERT INTO subscriptions VALUES(?,?,?,?,?,?,?)`, [uuidv4(),uid,s[0],s[1],s[2],s[3],s[4]]);
+    }
+  }
  // Credit Reports
   db.run(`INSERT INTO credit_reports VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ['cr1','u1',782,'Excellent',12,8,4,98,22.5,1,0,'2018-03-15',7.9,45000,10125,'2026-02-05']);
   db.run(`INSERT INTO credit_reports VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ['cr2','u2',694,'Good',8,5,3,94,38.2,3,0,'2020-06-20',5.6,28000,10696,'2026-02-05']);
@@ -191,17 +215,43 @@ app.get('/api/subscriptions/analysis/:userId', (req, res) => {
   const transactions = query(`SELECT * FROM transactions WHERE user_id=? ORDER BY date DESC`, [uid]);
   
   // Simulate usage data (in real app, would track actual usage)
-  const usageData = {
-    'Netflix': { lastUsed: 23, usesPerMonth: 2 },
-    'Spotify': { lastUsed: 1, usesPerMonth: 25 },
-    'iCloud+': { lastUsed: 0, usesPerMonth: 30 },
-    'Gym': { lastUsed: 8, usesPerMonth: 4 },
-    'Adobe CC': { lastUsed: 2, usesPerMonth: 15 },
-    'ChatGPT Plus': { lastUsed: 0, usesPerMonth: 20 },
-    'AWS': { lastUsed: 1, usesPerMonth: 30 },
-    'NYT': { lastUsed: 45, usesPerMonth: 0 },
-    'Hulu': { lastUsed: 18, usesPerMonth: 3 }
+  // Per-user usage data for realistic demo
+  const userUsageData = {
+    'u1': { // Alex - Tech power user
+      'Netflix': { lastUsed: 21, usesPerMonth: 3 },      // CANCEL
+      'Spotify': { lastUsed: 0, usesPerMonth: 28 },      // KEEP
+      'iCloud+': { lastUsed: 0, usesPerMonth: 30 },      // KEEP
+      'Gym': { lastUsed: 12, usesPerMonth: 5 },          // REVIEW
+      'Adobe CC': { lastUsed: 1, usesPerMonth: 20 },     // KEEP
+      'ChatGPT Plus': { lastUsed: 0, usesPerMonth: 25 }, // KEEP
+      'AWS': { lastUsed: 0, usesPerMonth: 30 },          // KEEP
+      'NYT': { lastUsed: 45, usesPerMonth: 0 }           // CANCEL
+    },
+    'u2': { // Sarah - Student
+      'Netflix': { lastUsed: 2, usesPerMonth: 15 },      // KEEP
+      'Spotify': { lastUsed: 0, usesPerMonth: 20 },      // KEEP
+      'iCloud+': { lastUsed: 0, usesPerMonth: 30 },      // KEEP
+      'Gym': { lastUsed: 35, usesPerMonth: 1 },          // CANCEL
+      'Adobe CC': { lastUsed: 60, usesPerMonth: 0 },     // CANCEL
+      'ChatGPT Plus': { lastUsed: 1, usesPerMonth: 18 }, // KEEP
+      'AWS': { lastUsed: 90, usesPerMonth: 0 },          // CANCEL
+      'NYT': { lastUsed: 5, usesPerMonth: 8 },           // REVIEW
+      'Hulu': { lastUsed: 20, usesPerMonth: 2 }          // REVIEW
+    },
+    'u3': { // Jay - Premium user
+      'Netflix': { lastUsed: 1, usesPerMonth: 12 },      // KEEP
+      'Spotify': { lastUsed: 0, usesPerMonth: 25 },      // KEEP
+      'iCloud+': { lastUsed: 0, usesPerMonth: 30 },      // KEEP
+      'Gym': { lastUsed: 3, usesPerMonth: 12 },          // KEEP
+      'Adobe CC': { lastUsed: 14, usesPerMonth: 4 },     // REVIEW
+      'ChatGPT Plus': { lastUsed: 0, usesPerMonth: 22 }, // KEEP
+      'AWS': { lastUsed: 2, usesPerMonth: 15 },          // KEEP
+      'NYT': { lastUsed: 0, usesPerMonth: 20 },          // KEEP
+      'Hulu': { lastUsed: 40, usesPerMonth: 0 }          // CANCEL
+    }
   };
+  
+  const usageData = userUsageData[uid] || {};
   
   // Analyze each subscription
   const analyzed = subscriptions.map(sub => {

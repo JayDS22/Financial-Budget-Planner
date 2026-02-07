@@ -798,6 +798,7 @@ window.set=set;
 window.switchUser=function(id){
   loadDashboard(id);loadUsers();
   state.chatGoal=null;state.chatPhase='goal_select';state.chatMessages=[];
+  state.subscriptionAnalysis=null; // Reset subscription data for new user
 };
 
 // ========== INIT ==========
