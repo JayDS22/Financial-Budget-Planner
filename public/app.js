@@ -167,7 +167,7 @@ function drawVolumeChart(canvas,data){
 
 // ========== RENDER: NAV, LANDING, AUTH, SIDEBAR ==========
 function renderNav(){
-  return'<nav style="position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 36px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,16,.75);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)"><div style="display:flex;align-items:center;gap:9"><div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:15px;font-weight:700;color:#fff">V</div><span style="font-size:18px;font-weight:700">VisionFi</span><span class="badge" style="background:var(--blue-g);color:var(--blue);font-size:9px">VISA</span></div><div style="display:flex;gap:7"><button class="btn btn-g" onclick="set({page:\'auth\',authMode:\'login\'})">Sign In</button><button class="btn btn-p" onclick="set({page:\'auth\',authMode:\'register\'})">Get Started</button></div></nav>';
+  return'<nav style="position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 36px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(26,31,113,0.08);box-shadow:0 2px 12px rgba(26,31,113,0.04)"><div style="display:flex;align-items:center;gap:9px"><div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1A1F71,#2E348F);font-size:15px;font-weight:700;color:#fff">V</div><span style="font-size:18px;font-weight:700;color:#1A1F71">VisionFi</span><span class="badge" style="background:rgba(26,31,113,0.08);color:#1A1F71;font-size:9px;border:1px solid rgba(26,31,113,0.12)">VISA</span></div><div style="display:flex;gap:7px"><button class="btn btn-g" style="border:1px solid rgba(26,31,113,0.15);color:#1A1F71;background:transparent" onclick="set({page:\'auth\',authMode:\'login\'})">Sign In</button><button class="btn btn-p" style="background:linear-gradient(135deg,#1A1F71,#2E348F)" onclick="set({page:\'auth\',authMode:\'register\'})">Get Started</button></div></nav>';
 }
 
 function renderLanding(){
@@ -176,7 +176,7 @@ function renderLanding(){
 
 function renderAuth(){
   var isR=state.authMode==='register';
-  return'<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden"><div class="orb" style="background:#5b8cff;width:450px;height:450px;top:8%;left:8%"></div><div class="orb" style="background:#b07cff;width:380px;height:380px;top:48%;left:62%"></div><div style="width:100%;max-width:400px;position:relative;z-index:1;animation:fadeIn .5s"><div style="display:flex;align-items:center;gap:9;margin-bottom:36px;justify-content:center;cursor:pointer" onclick="set({page:\'landing\'})"><div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:17px;font-weight:700;color:#fff">V</div><span style="font-size:21px;font-weight:700">VisionFi</span></div><div style="padding:28px;border-radius:16px;background:rgba(11,11,22,.85);border:1px solid var(--bd);backdrop-filter:blur(20px)"><h2 style="font-size:21px;font-weight:700;margin-bottom:22px">'+(isR?'Create account':'Welcome back')+'</h2><div id="auth-error" class="err-msg"></div><form id="auth-form" style="display:flex;flex-direction:column;gap:12px">'+(isR?'<div><label class="label">Name</label><input class="input" id="auth-name" required/></div>':'')+'<div><label class="label">Email</label><input class="input" id="auth-email" type="email" value="alex@cmu.edu" required/></div><div><label class="label">Password</label><input class="input" id="auth-pass" type="password" value="demo123" required/></div>'+(isR?'<div><label class="label">Income</label><input class="input" id="auth-income" type="number" placeholder="7500"/></div>':'')+'<button type="submit" class="btn btn-p" style="width:100%;padding:13px">'+(isR?'Create Account':'Sign In')+'</button><p style="text-align:center;font-size:10px;color:var(--t3);margin-top:4px">Demo: alex@cmu.edu / sarah@gmail.com / jay@cmu.edu (pw: demo123)</p></form></div><p style="text-align:center;margin-top:16px;font-size:12px;color:var(--t3)">'+(isR?'Have account? ':'No account? ')+'<span style="color:var(--blue);cursor:pointer" onclick="set({authMode:\''+(isR?'login':'register')+'\'})\">'+(isR?'Sign In':'Sign Up')+'</span></p></div></div>';
+  return'<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;background:#F7F8FC"><div class="orb" style="background:#1A1F71;width:450px;height:450px;top:8%;left:8%;opacity:0.03"></div><div class="orb" style="background:#F7B600;width:380px;height:380px;top:48%;left:62%;opacity:0.05"></div><div style="width:100%;max-width:400px;position:relative;z-index:1;animation:fadeIn .5s"><div style="display:flex;align-items:center;gap:9px;margin-bottom:36px;justify-content:center;cursor:pointer" onclick="set({page:\'landing\'})"><div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1A1F71,#2E348F);font-size:17px;font-weight:700;color:#fff">V</div><span style="font-size:21px;font-weight:700;color:#1A1F71">VisionFi</span></div><div style="padding:28px;border-radius:16px;background:#FFFFFF;border:1px solid rgba(26,31,113,0.1);box-shadow:0 8px 32px rgba(26,31,113,0.08)"><h2 style="font-size:21px;font-weight:700;margin-bottom:22px;color:#1A1F71">'+(isR?'Create account':'Welcome back')+'</h2><div id="auth-error" class="err-msg"></div><form id="auth-form" style="display:flex;flex-direction:column;gap:12px">'+(isR?'<div><label class="label" style="color:#4A5090">Name</label><input class="input" id="auth-name" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71" required/></div>':'')+'<div><label class="label" style="color:#4A5090">Email</label><input class="input" id="auth-email" type="email" value="alex@cmu.edu" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71" required/></div><div><label class="label" style="color:#4A5090">Password</label><input class="input" id="auth-pass" type="password" value="demo123" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71" required/></div>'+(isR?'<div><label class="label" style="color:#4A5090">Income</label><input class="input" id="auth-income" type="number" placeholder="7500" style="background:#F7F8FC;border:1px solid rgba(26,31,113,0.12);color:#1A1F71"/></div>':'')+'<button type="submit" class="btn btn-p" style="width:100%;padding:13px;background:linear-gradient(135deg,#1A1F71,#2E348F)">'+(isR?'Create Account':'Sign In')+'</button><p style="text-align:center;font-size:10px;color:#7A80B0;margin-top:4px">Demo: alex@cmu.edu / sarah@gmail.com / jay@cmu.edu (pw: demo123)</p></form></div><p style="text-align:center;margin-top:16px;font-size:12px;color:#7A80B0">'+(isR?'Have account? ':'No account? ')+'<span style="color:#1A1F71;font-weight:600;cursor:pointer" onclick="set({authMode:\''+(isR?'login':'register')+'\'})\">'+(isR?'Sign In':'Sign Up')+'</span></p></div></div>';
 }
 
 function renderSidebar(){
@@ -962,23 +962,23 @@ function renderSmartFeaturesPanel(){
     {id:'savings_goal',icon:'🎯',name:'Auto Daily Savings',desc:'Automatically save a fixed amount daily',presets:null}
   ];
   
-  return '<div onclick="if(event.target===this)closeSmartFeaturesPanel()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200">' +
-    '<div data-smart-panel style="position:fixed;top:0;right:0;bottom:0;width:400px;background:linear-gradient(180deg,#0e0e1a 0%,#0a0a14 100%);border-left:1px solid rgba(255,255,255,0.08);z-index:201;display:flex;flex-direction:column">'+
-      '<div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:flex-start">' +
+return '<div onclick="if(event.target===this)closeSmartFeaturesPanel()" style="position:fixed;inset:0;background:rgba(26,31,113,0.4);backdrop-filter:blur(4px);z-index:200">' +
+    '<div data-smart-panel style="position:fixed;top:0;right:0;bottom:0;width:400px;background:linear-gradient(180deg,#FFFFFF 0%,#F7F8FC 100%);border-left:1px solid rgba(26,31,113,0.1);z-index:201;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(26,31,113,0.1)">'+
+      '<div style="padding:20px 24px;border-bottom:1px solid rgba(26,31,113,0.08);display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(135deg,#1A1F71 0%,#2E348F 100%)">' +
         '<div>' +
           '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
             '<span style="font-size:22px">⚙️</span>' +
-            '<h2 style="font-size:20px;font-weight:700;margin:0">Smart Features</h2>' +
+            '<h2 style="font-size:20px;font-weight:700;margin:0;color:#FFFFFF">Smart Features</h2>' +
           '</div>' +
-          '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.5)">' +
-            '<span style="color:var(--green)">' + stats.activeCount + ' active</span>' +
+          '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.7)">' +
+            '<span style="color:#F7B600;font-weight:600">' + stats.activeCount + ' active</span>' +
             '<span>•</span>' +
-            '<span style="color:var(--green);font-weight:600">$' + stats.totalSaved.toFixed(2) + ' saved</span>' +
+            '<span style="color:#F7B600;font-weight:600">$' + stats.totalSaved.toFixed(2) + ' saved</span>' +
           '</div>' +
         '</div>' +
-        '<button onclick="closeSmartFeaturesPanel()" style="width:32px;height:32px;border-radius:8px;border:none;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>' +
+        '<button onclick="closeSmartFeaturesPanel()" style="width:32px;height:32px;border-radius:8px;border:none;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background 0.15s" onmouseover="this.style.background=\'rgba(255,255,255,0.25)\'" onmouseout="this.style.background=\'rgba(255,255,255,0.15)\'">✕</button>' +
       '</div>' +
-      '<div style="flex:1;overflow-y:auto;padding:16px 20px">' +
+      '<div style="flex:1;overflow-y:auto;padding:16px 20px;background:#F7F8FC">' +
         features.map(function(f, idx){
           var isMain = idx < 2;
           var featureState = sf[f.id] || { enabled: false };
@@ -986,34 +986,34 @@ function renderSmartFeaturesPanel(){
           var savedAmount = featureState.saved || 0;
           var currentPreset = featureState.preset || 0;
           
-          var bg = isEnabled ? (isMain ? 'linear-gradient(135deg,rgba(61,219,160,0.08),rgba(91,140,255,0.05))' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.02)';
-          var border = isEnabled ? (isMain ? 'rgba(61,219,160,0.2)' : 'rgba(255,255,255,0.08)') : 'rgba(255,255,255,0.06)';
+          var bg = isEnabled ? (isMain ? 'linear-gradient(135deg,rgba(0,135,90,0.08),rgba(26,31,113,0.05))' : '#FFFFFF') : '#FFFFFF';
+          var border = isEnabled ? (isMain ? 'rgba(0,135,90,0.25)' : 'rgba(26,31,113,0.12)') : 'rgba(26,31,113,0.1)';
           
-          var html = '<div style="padding:'+(isMain?'18px':'16px')+';background:'+bg+';border:1px solid '+border+';border-radius:'+(isMain?'14px':'12px')+';margin-bottom:'+(isMain?'12px':'10px')+'">';
+          var html = '<div style="padding:'+(isMain?'18px':'16px')+';background:'+bg+';border:1px solid '+border+';border-radius:'+(isMain?'14px':'12px')+';margin-bottom:'+(isMain?'12px':'10px')+';box-shadow:0 2px 8px rgba(26,31,113,0.04)">';
           
           html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;'+(isMain?'margin-bottom:12px':'')+'">';
           html += '<div style="display:flex;gap:12px;align-items:center">';
           html += '<span style="font-size:'+(isMain?'28px':'22px')+'">'+f.icon+'</span>';
           html += '<div>';
-          html += '<div style="font-size:'+(isMain?'15px':'14px')+';font-weight:'+(isMain?'600':'500')+'">'+f.name+'</div>';
-          html += '<div style="font-size:'+(isMain?'12px':'11px')+';color:rgba(255,255,255,'+(isMain?'0.5':'0.4')+');margin-top:'+(isMain?'4px':'2px')+'">'+f.desc+'</div>';
+          html += '<div style="font-size:'+(isMain?'15px':'14px')+';font-weight:'+(isMain?'600':'500')+';color:#1A1F71">'+f.name+'</div>';
+          html += '<div style="font-size:'+(isMain?'12px':'11px')+';color:'+(isMain?'#4A5090':'#7A80B0')+';margin-top:'+(isMain?'4px':'2px')+'">'+f.desc+'</div>';
           html += '</div></div>';
           
           // Toggle button
-          html += '<button onclick="toggleSmartFeature(\''+f.id+'\')" style="width:44px;height:24px;border-radius:12px;border:none;background:'+(isEnabled?'linear-gradient(135deg,#3ddba0,#2bb88a)':'rgba(255,255,255,0.1)')+';cursor:pointer;position:relative;transition:all 0.2s ease;flex-shrink:0">';
-          html += '<div style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:3px;left:'+(isEnabled?'23px':'3px')+';transition:left 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.2)"></div>';
+          html += '<button onclick="toggleSmartFeature(\''+f.id+'\')" style="width:44px;height:24px;border-radius:12px;border:none;background:'+(isEnabled?'linear-gradient(135deg,#00875A,#00A86B)':'#D9DEE9')+';cursor:pointer;position:relative;transition:all 0.2s ease;flex-shrink:0">';
+          html += '<div style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:3px;left:'+(isEnabled?'23px':'3px')+';transition:left 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.15)"></div>';
           html += '</button>';
           html += '</div>';
           
           // Saved amount and presets for main features
           if(isMain && isEnabled) {
-            html += '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(61,219,160,0.15);border-radius:8px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px">Saved: $'+savedAmount.toFixed(2)+'</div>';
+            html += '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(0,135,90,0.1);border-radius:8px;font-size:13px;color:#00875A;font-weight:600;margin-bottom:14px">Saved: $'+savedAmount.toFixed(2)+'</div>';
             
             if(f.presets) {
               html += '<div style="display:flex;gap:8px">';
               f.presets.forEach(function(p, i) {
                 var isActive = currentPreset === i;
-                html += '<button onclick="setSmartFeaturePreset(\''+f.id+'\','+i+')" style="flex:1;padding:10px;border-radius:8px;border:none;background:'+(isActive?'linear-gradient(135deg,#5b8cff,#b07cff)':'rgba(255,255,255,0.06)')+';color:'+(isActive?'white':'rgba(255,255,255,0.6)')+';font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">'+p+'</button>';
+                html += '<button onclick="setSmartFeaturePreset(\''+f.id+'\','+i+')" style="flex:1;padding:10px;border-radius:8px;border:none;background:'+(isActive?'linear-gradient(135deg,#1A1F71,#2E348F)':'#EEF1F8')+';color:'+(isActive?'white':'#4A5090')+';font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.15s;border:1px solid '+(isActive?'transparent':'rgba(26,31,113,0.1)')+'" onmouseover="if(!'+isActive+')this.style.background=\'#E4E8F2\'" onmouseout="if(!'+isActive+')this.style.background=\'#EEF1F8\'">'+p+'</button>';
               });
               html += '</div>';
             }
@@ -1023,11 +1023,11 @@ function renderSmartFeaturesPanel(){
           return html;
         }).join('') +
       '</div>' +
-      '<div style="padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2)">' +
-        '<div style="font-size:11px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5;margin-bottom:12px">Features run automatically in the background to help you save money.</div>' +
-        '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">' +
-          '<span style="font-size:10px;color:rgba(255,255,255,0.4)">Secured by</span>' +
-          '<img src="icons/Visa.svg" alt="Visa" style="height:18px" onerror="this.style.display=\'none\'" />' +
+      '<div style="padding:16px 20px;border-top:1px solid rgba(26,31,113,0.08);background:#FFFFFF">' +
+        '<div style="font-size:11px;color:#7A80B0;text-align:center;line-height:1.5;margin-bottom:12px">Features run automatically in the background to help you save money.</div>' +
+        '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:linear-gradient(135deg,#1A1F71,#2E348F);border-radius:8px">' +
+          '<span style="font-size:10px;color:rgba(255,255,255,0.8)">Secured by</span>' +
+          '<img src="icons/Visa.svg" alt="Visa" style="height:18px;filter:brightness(0) invert(1)" onerror="this.style.display=\'none\'" />' +
         '</div>' +
       '</div>' +
     '</div>' +
