@@ -13,12 +13,12 @@ try {
       apiKey: process.env.DEDALUS_API_KEY,
       environment: 'production'
     });
-    console.log('âœ… Dedalus SDK initialized - Multi-model routing enabled');
+    console.log('✅ Dedalus SDK initialized - Multi-model routing enabled');
   } else {
-    console.log('âš ï¸  DEDALUS_API_KEY not found - Using Anthropic fallback');
+    console.log('⚠️ DEDALUS_API_KEY not found - Using Anthropic fallback');
   }
 } catch (e) {
-  console.log('âš ï¸  Dedalus SDK not installed - Using Anthropic fallback');
+  console.log('⚠️ Dedalus SDK not installed - Using Anthropic fallback');
   console.log('   Run: npm install dedalus-labs');
 }
 
@@ -100,14 +100,14 @@ async function initDB() {
 
   // 3 Users
   const users = [
-    ['u1','Alex Chen','alex@cmu.edu','demo123','ðŸ‘¨â€ðŸ’»',7500,'USD','premium','Financial Independence'],
-    ['u2','Sarah Kim','sarah@gmail.com','demo123','ðŸ‘©â€ðŸ”¬',6200,'USD','free','Save for House'],
-    ['u3','Jay Gupta','jay@cmu.edu','demo123','ðŸ‘¨â€ðŸŽ“',8500,'USD','premium','Debt Freedom']
+    ['u1','Alex Chen','alex@cmu.edu','demo123','👨‍💻',7500,'USD','premium','Financial Independence'],
+    ['u2','Sarah Kim','sarah@gmail.com','demo123','👩‍🔬',6200,'USD','free','Save for House'],
+    ['u3','Jay Gupta','jay@cmu.edu','demo123','👨‍🎓',8500,'USD','premium','Debt Freedom']
   ];
   for (const u of users) db.run(`INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?)`, u);
 
   // Transactions
-  const txs = [['Whole Foods',-82.45,'Food & Dining','ðŸ›’','2026-02-05','expense'],['Uber Ride',-24.50,'Transport','ðŸš—','2026-02-04','expense'],['Netflix',-15.99,'Subscriptions','ðŸŽ¬','2026-02-04','expense'],['Payroll Deposit',3750.00,'Income','ðŸ’°','2026-02-03','income'],['Amazon',-67.89,'Shopping','ðŸ“¦','2026-02-03','expense'],['Starbucks',-6.75,'Food & Dining','â˜•','2026-02-02','expense'],['Electric Bill',-145.00,'Utilities','ðŸ’¡','2026-02-01','expense'],['CVS Pharmacy',-32.10,'Healthcare','ðŸ’Š','2026-02-01','expense'],['Movie Tickets',-28.00,'Entertainment','ðŸŽŸï¸','2026-01-31','expense'],['Freelance Pay',1200.00,'Income','ðŸ’µ','2026-01-30','income'],['Gas Station',-52.30,'Transport','â›½','2026-01-30','expense'],['Target',-94.20,'Shopping','ðŸŽ¯','2026-01-29','expense'],['Rent Payment',-2200.00,'Housing','ðŸ ','2026-02-01','expense'],['Spotify',-10.99,'Subscriptions','ðŸŽµ','2026-02-01','expense'],['Gym',-49.99,'Healthcare','ðŸ’ª','2026-02-01','expense']];
+  const txs = [['Whole Foods',-82.45,'Food & Dining','🛒','2026-02-05','expense'],['Uber Ride',-24.50,'Transport','🚗','2026-02-04','expense'],['Netflix',-15.99,'Subscriptions','🎬','2026-02-04','expense'],['Payroll Deposit',3750.00,'Income','💰','2026-02-03','income'],['Amazon',-67.89,'Shopping','📦','2026-02-03','expense'],['Starbucks',-6.75,'Food & Dining','☕','2026-02-02','expense'],['Electric Bill',-145.00,'Utilities','💡','2026-02-01','expense'],['CVS Pharmacy',-32.10,'Healthcare','💊','2026-02-01','expense'],['Movie Tickets',-28.00,'Entertainment','🎟️','2026-01-31','expense'],['Freelance Pay',1200.00,'Income','💵','2026-01-30','income'],['Gas Station',-52.30,'Transport','⛽','2026-01-30','expense'],['Target',-94.20,'Shopping','🎯','2026-01-29','expense'],['Rent Payment',-2200.00,'Housing','🏠','2026-02-01','expense'],['Spotify',-10.99,'Subscriptions','🎵','2026-02-01','expense'],['Gym',-49.99,'Healthcare','💪','2026-02-01','expense']];
   for (const uid of ['u1','u2','u3']) for (const t of txs) db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [uuidv4(),uid,...t]);
 
   // Budgets
@@ -117,33 +117,33 @@ async function initDB() {
   // Subscriptions - Different for each user for realistic demo
   const userSubs = {
     'u1': [ // Alex - Tech professional
-      ['Netflix',22.99,'ðŸŽ¬','2026-02-15','active'],
-      ['Spotify',16.99,'ðŸŽµ','2026-02-12','active'],
-      ['ChatGPT Plus',20.00,'ðŸ¤–','2026-02-22','active'],
-      ['AWS',32.50,'ðŸ–¥ï¸','2026-02-28','active'],
-      ['Adobe CC',54.99,'ðŸŽ¨','2026-02-18','active'],
-      ['NYT',17.00,'ðŸ“°','2026-02-10','active'],
-      ['GitHub Pro',7.00,'ðŸ’»','2026-02-20','active'],
-      ['iCloud+',2.99,'â˜ï¸','2026-02-20','active']
+      ['Netflix',22.99,'🎬','2026-02-15','active'],
+      ['Spotify',16.99,'🎵','2026-02-12','active'],
+      ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'],
+      ['AWS',32.50,'🖥️','2026-02-28','active'],
+      ['Adobe CC',54.99,'🎨','2026-02-18','active'],
+      ['NYT',17.00,'📰','2026-02-10','active'],
+      ['GitHub Pro',7.00,'💻','2026-02-20','active'],
+      ['iCloud+',2.99,'☁️','2026-02-20','active']
     ],
     'u2': [ // Sarah - Student/Researcher  
-      ['Spotify',10.99,'ðŸŽµ','2026-02-12','active'],
-      ['Netflix',15.99,'ðŸŽ¬','2026-02-15','active'],
-      ['Hulu',15.99,'ðŸ“º','2026-02-25','active'],
-      ['Gym',49.99,'ðŸ’ª','2026-03-01','active'],
-      ['iCloud+',2.99,'â˜ï¸','2026-02-20','active'],
-      ['Notion',10.00,'ðŸ“','2026-02-18','active']
+      ['Spotify',10.99,'🎵','2026-02-12','active'],
+      ['Netflix',15.99,'🎬','2026-02-15','active'],
+      ['Hulu',15.99,'📺','2026-02-25','active'],
+      ['Gym',49.99,'💪','2026-03-01','active'],
+      ['iCloud+',2.99,'☁️','2026-02-20','active'],
+      ['Notion',10.00,'📝','2026-02-18','active']
     ],
     'u3': [ // Jay - Premium user
-      ['Netflix',22.99,'ðŸŽ¬','2026-02-15','active'],
-      ['Spotify Family',16.99,'ðŸŽµ','2026-02-12','active'],
-      ['HBO Max',15.99,'ðŸŽ¥','2026-02-20','active'],
-      ['Adobe CC',54.99,'ðŸŽ¨','2026-02-18','active'],
-      ['ChatGPT Plus',20.00,'ðŸ¤–','2026-02-22','active'],
-      ['Gym',79.99,'ðŸ’ª','2026-03-01','active'],
-      ['WSJ',38.99,'ðŸ“°','2026-02-10','active'],
-      ['iCloud+',9.99,'â˜ï¸','2026-02-20','active'],
-      ['Disney+',13.99,'ðŸ°','2026-02-25','active']
+      ['Netflix',22.99,'🎬','2026-02-15','active'],
+      ['Spotify Family',16.99,'🎵','2026-02-12','active'],
+      ['HBO Max',15.99,'🎥','2026-02-20','active'],
+      ['Adobe CC',54.99,'🎨','2026-02-18','active'],
+      ['ChatGPT Plus',20.00,'🤖','2026-02-22','active'],
+      ['Gym',79.99,'💪','2026-03-01','active'],
+      ['WSJ',38.99,'📰','2026-02-10','active'],
+      ['iCloud+',9.99,'☁️','2026-02-20','active'],
+      ['Disney+',13.99,'🏰','2026-02-25','active']
     ]
   };
 
@@ -159,15 +159,15 @@ async function initDB() {
 
   // Credit Cards
   const cards = [
-    ['cc1','u1','Sapphire Preferred','Chase','Visa',15000,3200,85,21.49,'2026-02-20','Travel Points',2.0,'active','4821'],
-    ['cc2','u1','Blue Cash Preferred','Amex','Amex',20000,4500,120,19.99,'2026-02-25','Cashback',6.0,'active','3045'],
-    ['cc3','u1','Freedom Unlimited','Chase','Visa',10000,2425,65,20.49,'2026-02-18','Cashback',1.5,'active','9912'],
-    ['cc4','u2','Quicksilver','Capital One','Visa',12000,4200,110,24.99,'2026-02-22','Cashback',1.5,'active','7733'],
-    ['cc5','u2','Discover It','Discover','Discover',8000,3100,82,22.49,'2026-02-15','Cashback',5.0,'active','1188'],
-    ['cc6','u2','Double Cash','Citi','Mastercard',8000,3396,90,18.49,'2026-02-28','Cashback',2.0,'active','5540'],
-    ['cc7','u3','Sapphire Reserve','Chase','Visa',25000,6800,180,24.49,'2026-02-20','Travel Points',3.0,'active','2299'],
-    ['cc8','u3','Platinum Card','Amex','Amex',30000,8500,225,22.99,'2026-02-25','Travel Points',5.0,'active','1001'],
-    ['cc9','u3','Venture X','Capital One','Visa',20000,3920,105,21.99,'2026-02-18','Travel Miles',2.0,'active','6654'],
+    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','✈️'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','🏨'],
+    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','🛒'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','🏪'],
+    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','⛽'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','🍎'],
+    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','🎯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','🍔'],
+    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','📦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','💄'],
+    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','🛒'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','👗'],
+    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','🏨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','🍷'],
+    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','👜'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','💻'],
+    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','🛒'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','🔨'],
   ];
   for (const c of cards) db.run(`INSERT INTO credit_cards VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, c);
 
@@ -227,7 +227,7 @@ async function initDB() {
   db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, ['sv2', 'u2', 45.67, '2026-02-07T09:15:00Z']);
   db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, ['sv3', 'u3', 560.00, '2026-02-07T06:00:00Z']);
 
-  console.log('âœ… Database ready: 3 users, credit reports, cards, loans, EMIs, agent memory');
+  console.log('✅ Database ready: 3 users, credit reports, cards, loans, EMIs, agent memory');
 }
 
 // Auth
@@ -235,7 +235,7 @@ app.post('/api/register', (req, res) => {
   const {name,email,password,income,currency,goal} = req.body;
   if (!name||!email||!password) return res.status(400).json({error:'All fields required'});
   if (query(`SELECT id FROM users WHERE email=?`,[email]).length) return res.status(409).json({error:'Email exists'});
-  const id=uuidv4(), av=['ðŸ‘¤','ðŸ‘©â€ðŸ’¼','ðŸ‘¨â€ðŸŽ“','ðŸ‘©â€ðŸŽ¨','ðŸ§‘â€ðŸ’»'][Math.floor(Math.random()*5)];
+  const id=uuidv4(), av=['👤','👩‍💼','👨‍🎓','👩‍🎨','🧑‍💻'][Math.floor(Math.random()*5)];
   db.run(`INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)`, [id,name,email,password,av,income||5000,currency||'USD','free',goal||'General']);
   const cats=[['Housing',2200],['Food & Dining',800],['Transport',450],['Entertainment',300],['Shopping',500],['Subscriptions',120],['Healthcare',200],['Utilities',280]];
   for(const c of cats) db.run(`INSERT INTO budgets VALUES(?,?,?,?)`,[uuidv4(),id,...c]);
@@ -581,7 +581,7 @@ app.get('/api/briefing/:userId', (req, res) => {
         amount: loan.emi_amount,
         daysUntil: daysUntil,
         type: 'loan',
-        icon: 'ðŸ¦'
+        icon: '🏦'
       });
     }
   });
@@ -600,13 +600,13 @@ app.get('/api/briefing/:userId', (req, res) => {
   let greeting, emoji;
   if (hour < 12) {
     greeting = 'Good morning';
-    emoji = 'â˜€ï¸';
+    emoji = '☀️';
   } else if (hour < 17) {
     greeting = 'Good afternoon';
-    emoji = 'ðŸŒ¤ï¸';
+    emoji = '🌤️';
   } else {
     greeting = 'Good evening';
-    emoji = 'ðŸŒ™';
+    emoji = '🌙';
   }
   
   res.json({
@@ -656,7 +656,7 @@ function generateSmartTip(transactions, upcomingBills, user) {
   if (topMerchant && upcomingBills.length > 0) {
     const avgSpend = Math.round(topTotal / topCount * 100) / 100;
     return {
-      text: `Skip ${topMerchant} today â†’ Extra buffer for ${upcomingBills[0].name}`,
+      text: `Skip ${topMerchant} today → Extra buffer for ${upcomingBills[0].name}`,
       detail: `You've visited ${topCount} times this month ($${topTotal.toFixed(2)} total)`,
       savings: avgSpend
     };
@@ -942,18 +942,18 @@ Patterns: ${JSON.stringify(pipelineResults.step2_patterns)}
 
 Create a response with EXACTLY this structure (use markdown):
 
-## ðŸŽ¯ Your Personalized Action Plan
+## 🎯 Your Personalized Action Plan
 
-### ðŸ’° Quick Wins (This Week)
+### 💰 Quick Wins (This Week)
 [3 specific actions with exact dollar amounts]
 
-### ðŸ“Š Key Insights
+### 📊 Key Insights
 [2-3 most important findings from the analysis]
 
-### ðŸš€ 30-Day Challenge
+### 🚀 30-Day Challenge
 [One focused goal with measurable target]
 
-### ðŸ“ˆ Impact on ${user.goal}
+### 📈 Impact on ${user.goal}
 [How these changes accelerate their goal - be specific with timeline]
 
 Keep response under 300 words. Use **bold** for numbers. Be specific and actionable.`;
@@ -1022,7 +1022,7 @@ app.get('/api/credit/upcoming/:userId', (req, res) => {
         type: 'credit_card',
         id: card.id,
         name: card.card_name,
-        icon: 'ðŸ’³',
+        icon: '💳',
         amount: card.current_balance,
         minAmount: card.min_payment,
         dueDate: card.due_date,
@@ -1047,7 +1047,7 @@ app.get('/api/credit/upcoming/:userId', (req, res) => {
         type: 'loan_emi',
         id: loan.id,
         name: loan.loan_name,
-        icon: 'ðŸ¦',
+        icon: '🏦',
         amount: loan.emi_amount,
         dueDate: loan.next_emi_date,
         daysUntil,
@@ -1240,7 +1240,7 @@ app.post('/api/credit/simulate', (req, res) => {
 app.post('/api/transactions', (req,res) => {
   const {user_id,name,amount,category,icon,date,type}=req.body;
   const id=uuidv4();
-  db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [id,user_id,name,amount,category,icon||'ðŸ’³',date,type||'expense']);
+  db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [id,user_id,name,amount,category,icon||'💳',date,type||'expense']);
   res.json({success:true,id});
 });
 
