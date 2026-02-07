@@ -2,6 +2,8 @@
 // AI Chat module with Goal-Based Financial Advisor
 
 // ========== GOALS & INTAKE DATA ==========
+// Session ID to track current chat session and ignore stale responses
+var chatSessionId = 0;
 var GOALS=[
   {id:'Financial Independence',icon:'🦅',label:'Financial Independence',desc:'Build wealth to live on passive income',color:'#5b8cff'},
   {id:'Retirement',icon:'🌴',label:'Retirement Planning',desc:'Secure your future with smart savings',color:'#3ddba0'},
@@ -96,7 +98,8 @@ window.selectChatGoal=selectChatGoal;
 function resetChatGoal(){
   var userId=state.currentUser?state.currentUser.id:null;
   if(userId&&state.chatGoal){api('POST','/api/agent-memory/clear',{userId:userId,goal:state.chatGoal});}
-  state.chatGoal=null;state.chatPhase='goal_select';state.chatMessages=[];state.chatSending=false;state.chatAgentState=null;state.intakeStep=0;state.intakeAnswers={};state.chatScrollNeeded=false;renderChatContainer();
+  chatSessionId++; // Invalidate any pending responses
+  state.chatGoal=null;state.chatPhase='goal_select';state.chatMessages=[];state.chatSending=false;state.chatAgentState=null;state.intakeStep=0;state.intakeAnswers={};state.chatScrollNeeded=false;render();
 }
 window.resetChatGoal=resetChatGoal;
 
@@ -126,6 +129,7 @@ function answerIntakeQuestion(answer){
 window.answerIntakeQuestion=answerIntakeQuestion;
 
 async function generatePlan(){
+  var currentSessionId = chatSessionId;
   try{
     var answersText=Object.keys(state.intakeAnswers).map(function(key){
       return key.replace(/_/g,' ')+': '+state.intakeAnswers[key];
@@ -142,8 +146,11 @@ async function generatePlan(){
       intakeAnswers:state.intakeAnswers,
       intakeComplete:true
     });
+    // Only process response if session hasn't changed
+    if(currentSessionId !== chatSessionId) return;
     state.chatMessages.push({role:'ai',text:data.reply});
   }catch(e){
+    if(currentSessionId !== chatSessionId) return;
     state.chatMessages.push({role:'error',text:e.message});
   }
   state.chatSending=false;
@@ -151,13 +158,20 @@ async function generatePlan(){
 }
 
 async function doChat(message){
+  var currentSessionId = chatSessionId;
   try{
     var history=state.chatMessages.filter(function(m){return(m.role==='user'||m.role==='ai')&&!m.hidden});
     var userId=state.currentUser?state.currentUser.id:null;
     var data=await api('POST','/api/chat',{message:message,apiKey:apiKey,context:buildContext(state.dashData),goal:state.chatGoal,conversationHistory:history.slice(0,-1),userId:userId});
+    // Only process response if session hasn't changed (user didn't refresh/reset)
+    if(currentSessionId !== chatSessionId) return;
     state.chatMessages.push({role:'ai',text:data.reply});
     if(data.agentState){state.chatAgentState=data.agentState;}
-  }catch(e){state.chatMessages.push({role:'error',text:e.message})}
+  }catch(e){
+    // Only show error if session hasn't changed
+    if(currentSessionId !== chatSessionId) return;
+    state.chatMessages.push({role:'error',text:e.message});
+  }
   state.chatSending=false;render();
   var b=document.querySelector('.chat-body');if(b)b.scrollTop=b.scrollHeight;
 }

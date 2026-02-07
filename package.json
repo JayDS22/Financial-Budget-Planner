@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.6",
+    "dedalus-labs": "^0.1.0-alpha.8",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "sql.js": "^1.13.0",

@@ -102,25 +102,25 @@ function showToast(m,t){
 window.showToast = showToast;  // ADD THIS LINE
 
 function set(u){
-  var isChatOnlyChange = (u.chatOpen !== undefined || u.chatPhase !== undefined || 
-                          u.chatMessages !== undefined || u.chatSending !== undefined ||
-                          u.showApiSetup !== undefined) && 
-                         Object.keys(u).every(function(k) {
-                           return ['chatOpen','chatPhase','chatMessages','chatSending','showApiSetup','chatScrollNeeded','intakeStep','intakeAnswers','chatGoal'].indexOf(k) !== -1;
-                         });
+  var isChatChange=u.chatOpen!==undefined||u.chatPhase!==undefined||u.chatMessages!==undefined;
   
-  Object.assign(state, u);
-  
-  if (u.chatOpen === true) {
-    state.chatScrollNeeded = true;
+  // Reset chat state when opening chat window fresh (user clicks FAB to open)
+  if(u.chatOpen===true && !state.chatOpen){
+    // Reset to goal selection with fresh state
+    state.chatGoal=null;
+    state.chatPhase='goal_select';
+    state.chatMessages=[];
+    state.chatSending=false;
+    state.chatAgentState=null;
+    state.intakeStep=0;
+    state.intakeAnswers={};
   }
   
-  // Use optimized chat render if only chat state changed
-  if (isChatOnlyChange && state.page === 'app' && typeof renderChatContainer === 'function') {
-    renderChatContainer();
-  } else {
-    render();
+  Object.assign(state,u);
+  if(isChatChange&&u.chatOpen===true){
+    state.chatScrollNeeded=true;
   }
+  render();
 }
 
 // ========== CHART UTILITIES ==========
@@ -200,45 +200,45 @@ function renderAuth(){
 }
 
 // ========== OPTIMIZED CHAT CONTAINER RENDER ==========
-function renderChatContainer() {
-  // Find or create chat container
-  var existingChat = document.querySelector('.chat-fab, .chat-window');
-  var chatHtml = renderChat();
+// function renderChatContainer() {
+//   // Find or create chat container
+//   var existingChat = document.querySelector('.chat-fab, .chat-window');
+//   var chatHtml = renderChat();
   
-  if (existingChat) {
-    // Create a temporary container to hold new chat elements
-    var temp = document.createElement('div');
-    temp.innerHTML = chatHtml;
+//   if (existingChat) {
+//     // Create a temporary container to hold new chat elements
+//     var temp = document.createElement('div');
+//     temp.innerHTML = chatHtml;
     
-    // Remove old chat elements
-    var oldFab = document.querySelector('.chat-fab');
-    var oldWindow = document.querySelector('.chat-window');
-    if (oldFab) oldFab.remove();
-    if (oldWindow) oldWindow.remove();
+//     // Remove old chat elements
+//     var oldFab = document.querySelector('.chat-fab');
+//     var oldWindow = document.querySelector('.chat-window');
+//     if (oldFab) oldFab.remove();
+//     if (oldWindow) oldWindow.remove();
     
-    // Append new chat elements to body
-    while (temp.firstChild) {
-      document.body.appendChild(temp.firstChild);
-    }
-  } else {
-    // Append chat to body
-    var temp = document.createElement('div');
-    temp.innerHTML = chatHtml;
-    while (temp.firstChild) {
-      document.body.appendChild(temp.firstChild);
-    }
-  }
+//     // Append new chat elements to body
+//     while (temp.firstChild) {
+//       document.body.appendChild(temp.firstChild);
+//     }
+//   } else {
+//     // Append chat to body
+//     var temp = document.createElement('div');
+//     temp.innerHTML = chatHtml;
+//     while (temp.firstChild) {
+//       document.body.appendChild(temp.firstChild);
+//     }
+//   }
   
-  // Handle scroll if needed
-  if (state.chatScrollNeeded) {
-    state.chatScrollNeeded = false;
-    requestAnimationFrame(function() {
-      var cb = document.querySelector('.chat-body');
-      if (cb) cb.scrollTop = cb.scrollHeight;
-    });
-  }
-}
-window.renderChatContainer = renderChatContainer;
+//   // Handle scroll if needed
+//   if (state.chatScrollNeeded) {
+//     state.chatScrollNeeded = false;
+//     requestAnimationFrame(function() {
+//       var cb = document.querySelector('.chat-body');
+//       if (cb) cb.scrollTop = cb.scrollHeight;
+//     });
+//   }
+// }
+// window.renderChatContainer = renderChatContainer;
 
 function renderSidebar(){
   var u=state.currentUser;if(!u)return'';
@@ -1226,7 +1226,6 @@ window.addEventListener('resize',function(){render()});
 
 // ========== ORCHESTRATOR FUNCTIONS ==========
 
-// Run the Smart Spending Orchestrator with visual model handoff
 async function runSmartOrchestrator() {
   if (!state.currentUser || !apiKey) {
     showToast('Please set up your API key first', 'error');
@@ -1236,25 +1235,31 @@ async function runSmartOrchestrator() {
   state.orchestratorLoading = true;
   state.orchestratorStep = 1;
   state.showOrchestrator = true;
-  render();
+  render(); // Initial render to show modal
   
   // Visual delay for each step (for demo effect)
   const stepDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   
+  // Helper function to update only the orchestrator modal content without full re-render
+  function updateOrchestratorStep(step) {
+    state.orchestratorStep = step;
+    const container = document.getElementById('orchestrator-modal-container');
+    if (container) {
+      container.innerHTML = getOrchestratorLoadingContent(step);
+    }
+  }
+  
   try {
     // Step 1: Show Haiku analyzing
-    state.orchestratorStep = 1;
-    render();
+    updateOrchestratorStep(1);
     await stepDelay(800);
     
     // Step 2: Show GPT-4 detecting patterns
-    state.orchestratorStep = 2;
-    render();
+    updateOrchestratorStep(2);
     await stepDelay(1000);
     
     // Step 3: Show Sonnet generating advice
-    state.orchestratorStep = 3;
-    render();
+    updateOrchestratorStep(3);
     
     // Make the actual API call
     const result = await api('POST', '/api/orchestrator/analyze', {
@@ -1264,7 +1269,7 @@ async function runSmartOrchestrator() {
     state.orchestratorData = result;
     state.orchestratorStep = 4; // Complete
     state.orchestratorLoading = false;
-    render();
+    render(); // Full render only for final results
     
   } catch (e) {
     console.error('Orchestrator error:', e);
@@ -1275,6 +1280,51 @@ async function runSmartOrchestrator() {
   }
 }
 window.runSmartOrchestrator = runSmartOrchestrator;
+
+// Helper function to generate just the loading content for step updates
+function getOrchestratorLoadingContent(step) {
+  const models = [
+    { id: 1, name: 'Claude Haiku', task: 'Categorizing transactions...', icon: '⚡', color: '#3ddba0' },
+    { id: 2, name: 'GPT-4o-mini', task: 'Detecting patterns...', icon: '🔍', color: '#5b8cff' },
+    { id: 3, name: 'Claude Sonnet', task: 'Generating advice...', icon: '🧠', color: '#b07cff' }
+  ];
+  
+  return models.map(m => {
+    const isActive = step === m.id;
+    const isComplete = step > m.id;
+    const isPending = step < m.id;
+    
+    return `
+      <div style="
+        display:flex;align-items:center;gap:14px;padding:16px;
+        background:${isActive ? 'linear-gradient(135deg,rgba(91,140,255,0.1),rgba(61,219,160,0.05))' : 'var(--bg2)'};
+        border-radius:12px;
+        border:1px solid ${isActive ? m.color : 'var(--bd)'};
+        opacity:${isPending ? '0.5' : '1'};
+        transition:all 0.3s ease;
+      ">
+        <div style="
+          width:44px;height:44px;border-radius:10px;
+          display:flex;align-items:center;justify-content:center;
+          background:${isComplete ? 'var(--green-g)' : isActive ? m.color + '22' : 'var(--bg3)'};
+          font-size:20px;
+        ">
+          ${isComplete ? '✓' : m.icon}
+        </div>
+        <div style="flex:1;text-align:left">
+          <div style="font-size:14px;font-weight:600;color:${isActive ? m.color : 'var(--t1)'}">${m.name}</div>
+          <div style="font-size:12px;color:var(--t3)">${isActive ? m.task : isComplete ? 'Complete' : 'Waiting...'}</div>
+        </div>
+        ${isActive ? `
+          <div style="width:20px;height:20px" class="spinner"></div>
+        ` : isComplete ? `
+          <span style="color:var(--green);font-size:14px">✓</span>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+window.getOrchestratorLoadingContent = getOrchestratorLoadingContent;
 
 // Close orchestrator modal
 function closeOrchestrator() {
@@ -1307,41 +1357,8 @@ function renderOrchestratorModal() {
           <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">🧠 Smart Spending Orchestrator</h2>
           <p style="font-size:13px;color:var(--t3);margin-bottom:24px">Running multi-model analysis pipeline...</p>
           
-          <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px">
-            ${models.map(m => {
-              const isActive = step === m.id;
-              const isComplete = step > m.id;
-              const isPending = step < m.id;
-              
-              return `
-                <div style="
-                  display:flex;align-items:center;gap:14px;padding:16px;
-                  background:${isActive ? 'linear-gradient(135deg,rgba(91,140,255,0.1),rgba(61,219,160,0.05))' : 'var(--bg2)'};
-                  border-radius:12px;
-                  border:1px solid ${isActive ? m.color : 'var(--bd)'};
-                  opacity:${isPending ? '0.5' : '1'};
-                  transition:all 0.3s ease;
-                ">
-                  <div style="
-                    width:44px;height:44px;border-radius:10px;
-                    display:flex;align-items:center;justify-content:center;
-                    background:${isComplete ? 'var(--green-g)' : isActive ? m.color + '22' : 'var(--bg3)'};
-                    font-size:20px;
-                  ">
-                    ${isComplete ? '✓' : m.icon}
-                  </div>
-                  <div style="flex:1;text-align:left">
-                    <div style="font-size:14px;font-weight:600;color:${isActive ? m.color : 'var(--t1)'}">${m.name}</div>
-                    <div style="font-size:12px;color:var(--t3)">${isActive ? m.task : isComplete ? 'Complete' : 'Waiting...'}</div>
-                  </div>
-                  ${isActive ? `
-                    <div style="width:20px;height:20px" class="spinner"></div>
-                  ` : isComplete ? `
-                    <span style="color:var(--green);font-size:14px">✓</span>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
+          <div id="orchestrator-modal-container" style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px">
+              ${getOrchestratorLoadingContent(step)}
           </div>
           
           <div style="font-size:11px;color:var(--t3)">

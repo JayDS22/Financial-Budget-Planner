@@ -1,6 +1,27 @@
 if (!process.env.RAILWAY_ENVIRONMENT) {
   require('dotenv').config();
 }
+
+// ===== STEP 1: Add these imports at the TOP of server.js (after line 1) =====
+
+// Add this line after: require('dotenv').config();
+let dedalusClient = null;
+try {
+  const Dedalus = require('dedalus-labs').default;
+  if (process.env.DEDALUS_API_KEY) {
+    dedalusClient = new Dedalus({
+      apiKey: process.env.DEDALUS_API_KEY,
+      environment: 'production'
+    });
+    console.log('✅ Dedalus SDK initialized - Multi-model routing enabled');
+  } else {
+    console.log('⚠️  DEDALUS_API_KEY not found - Using Anthropic fallback');
+  }
+} catch (e) {
+  console.log('⚠️  Dedalus SDK not installed - Using Anthropic fallback');
+  console.log('   Run: npm install dedalus-labs');
+}
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -713,10 +734,63 @@ function calculateGoalProgress(user, transactions) {
 // SMART SPENDING ORCHESTRATOR WITH DEDALUS MODEL HANDOFFS
 // Add this code to server.js (after the briefing endpoint, around line 644)
 // ============================================================================
+// ===== STEP 2: Add this helper function (before the orchestrator endpoint) =====
 
+// Unified AI call that works with both Dedalus and Anthropic
+async function callAI(model, prompt, maxTokens, fallbackApiKey) {
+  // If Dedalus is available, use it
+  if (dedalusClient) {
+    try {
+      const response = await dedalusClient.chat.completions.create({
+        model: model,  // e.g., 'anthropic/claude-3-5-haiku-20241022' or 'openai/gpt-4o-mini'
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: maxTokens
+      });
+      return {
+        text: response.choices[0]?.message?.content || '',
+        provider: 'dedalus',
+        model: model
+      };
+    } catch (dedalusError) {
+      console.warn('Dedalus call failed, falling back to Anthropic:', dedalusError.message);
+    }
+  }
+  
+  // Fallback to direct Anthropic API
+  if (!fallbackApiKey) {
+    throw new Error('No API key available for fallback');
+  }
+  
+  const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': fallbackApiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  
+  if (!anthropicResponse.ok) {
+    throw new Error(`Anthropic API error: ${anthropicResponse.status}`);
+  }
+  
+  const data = await anthropicResponse.json();
+  return {
+    text: data.content[0]?.text || '',
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-20250514'
+  };
+}
 // ========== DEDALUS SMART ORCHESTRATOR ==========
 // This is the KILLER FEATURE for the Dedalus SDK bonus prize
 // It chains multiple AI models to provide comprehensive financial analysis
+
+// ===== STEP 3: Replace the orchestrator endpoint (lines 720-981) with this =====
 
 app.post('/api/orchestrator/analyze', async (req, res) => {
   const { userId } = req.body;
@@ -744,43 +818,19 @@ app.post('/api/orchestrator/analyze', async (req, res) => {
   const totalSubCost = subscriptions.reduce((s, sub) => s + sub.amount, 0);
   const totalDebt = loans.reduce((s, l) => s + l.remaining_balance, 0) + 
                     creditCards.reduce((s, c) => s + c.current_balance, 0);
+
+  // Get fallback API key
+  const fallbackApiKey = req.headers['x-api-key'] || process.env.ANTHROPIC_API_KEY;
   
-  // Build context for AI analysis
-  const financialContext = {
-    user: {
-      name: user.name,
-      income: user.income,
-      goal: user.goal
-    },
-    metrics: {
-      totalSpent,
-      totalIncome,
-      savingsRate,
-      totalSubCost,
-      totalDebt,
-      creditScore: creditReport?.credit_score || 'N/A',
-      creditUtilization: creditReport?.credit_utilization || 'N/A'
-    },
-    transactions: transactions.slice(0, 30),
-    subscriptions,
-    creditCards,
-    loans
-  };
-  
-  // Get API key
-  const apiKey = req.headers['x-api-key'] || process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return res.status(400).json({ error: 'API key required' });
+  // Need at least one API key
+  if (!dedalusClient && !fallbackApiKey) {
+    return res.status(400).json({ 
+      error: 'API key required',
+      hint: 'Set DEDALUS_API_KEY or ANTHROPIC_API_KEY in .env file'
+    });
   }
   
   try {
-    // ============================================================
-    // DEDALUS-STYLE MODEL HANDOFF PIPELINE
-    // Step 1: Fast categorization (simulating Haiku)
-    // Step 2: Pattern detection (simulating GPT-4o-mini)  
-    // Step 3: Personalized advice (Claude Sonnet)
-    // ============================================================
-    
     const pipelineResults = {
       step1_categorization: null,
       step2_patterns: null,
@@ -788,7 +838,20 @@ app.post('/api/orchestrator/analyze', async (req, res) => {
       modelSequence: []
     };
     
-    // STEP 1: Transaction Categorization & Spending Breakdown (Fast Model - Haiku-style)
+    // Determine which models to use based on availability
+    const useDedalus = !!dedalusClient;
+    const models = useDedalus ? {
+      step1: 'anthropic/claude-3-5-haiku-20241022',  // Fast
+      step2: 'openai/gpt-4o-mini',                    // Cost-effective
+      step3: 'anthropic/claude-sonnet-4-20250514'    // Quality
+    } : {
+      step1: 'claude-sonnet-4 (fallback)',
+      step2: 'claude-sonnet-4 (fallback)',
+      step3: 'claude-sonnet-4 (fallback)'
+    };
+
+    // ========== STEP 1: Transaction Categorization ==========
+    const step1Start = Date.now();
     const step1Prompt = `Analyze these transactions and provide a JSON spending breakdown by category.
     
 Transactions: ${JSON.stringify(transactions.slice(0, 20).map(t => ({ name: t.name, amount: t.amount, category: t.category })))}
@@ -806,39 +869,23 @@ Respond ONLY with valid JSON in this exact format:
   "anomalies": ["High food spending", "Frequent small purchases"]
 }`;
 
-    const step1Response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', // In real Dedalus, this would be claude-3-haiku
-        max_tokens: 500,
-        messages: [{ role: 'user', content: step1Prompt }]
-      })
-    });
-    
-    if (step1Response.ok) {
-      const step1Data = await step1Response.json();
-      const step1Text = step1Data.content[0]?.text || '{}';
-      try {
-        // Extract JSON from response
-        const jsonMatch = step1Text.match(/\{[\s\S]*\}/);
-        pipelineResults.step1_categorization = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-      } catch (e) {
-        pipelineResults.step1_categorization = { raw: step1Text };
-      }
-      pipelineResults.modelSequence.push({
-        model: 'claude-3-haiku',
-        task: 'Transaction Categorization',
-        status: 'complete',
-        latency: '0.3s'
-      });
+    const step1Result = await callAI(models.step1, step1Prompt, 500, fallbackApiKey);
+    try {
+      const jsonMatch = step1Result.text.match(/\{[\s\S]*\}/);
+      pipelineResults.step1_categorization = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (e) {
+      pipelineResults.step1_categorization = { raw: step1Result.text };
     }
-    
-    // STEP 2: Pattern Detection & Subscription Analysis (Medium Model - GPT-4o-mini style)
+    pipelineResults.modelSequence.push({
+      model: useDedalus ? 'claude-3-5-haiku' : 'claude-sonnet-4',
+      task: 'Transaction Categorization',
+      status: 'complete',
+      latency: `${((Date.now() - step1Start) / 1000).toFixed(2)}s`,
+      provider: step1Result.provider
+    });
+
+    // ========== STEP 2: Pattern Detection ==========
+    const step2Start = Date.now();
     const step2Prompt = `Analyze subscriptions and spending patterns. Find waste and optimization opportunities.
 
 User Income: $${user.income}/month
@@ -861,38 +908,23 @@ Respond ONLY with valid JSON:
   "totalPotentialSavings": 89.99
 }`;
 
-    const step2Response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', // In real Dedalus, this would be gpt-4o-mini
-        max_tokens: 600,
-        messages: [{ role: 'user', content: step2Prompt }]
-      })
-    });
-    
-    if (step2Response.ok) {
-      const step2Data = await step2Response.json();
-      const step2Text = step2Data.content[0]?.text || '{}';
-      try {
-        const jsonMatch = step2Text.match(/\{[\s\S]*\}/);
-        pipelineResults.step2_patterns = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-      } catch (e) {
-        pipelineResults.step2_patterns = { raw: step2Text };
-      }
-      pipelineResults.modelSequence.push({
-        model: 'gpt-4o-mini',
-        task: 'Pattern Detection',
-        status: 'complete',
-        latency: '0.8s'
-      });
+    const step2Result = await callAI(models.step2, step2Prompt, 600, fallbackApiKey);
+    try {
+      const jsonMatch = step2Result.text.match(/\{[\s\S]*\}/);
+      pipelineResults.step2_patterns = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (e) {
+      pipelineResults.step2_patterns = { raw: step2Result.text };
     }
-    
-    // STEP 3: Personalized Financial Advice (Powerful Model - Claude Sonnet)
+    pipelineResults.modelSequence.push({
+      model: useDedalus ? 'gpt-4o-mini' : 'claude-sonnet-4',
+      task: 'Pattern Detection',
+      status: 'complete',
+      latency: `${((Date.now() - step2Start) / 1000).toFixed(2)}s`,
+      provider: step2Result.provider
+    });
+
+    // ========== STEP 3: Personalized Advice ==========
+    const step3Start = Date.now();
     const step3Prompt = `You are VisionFi's expert financial advisor. Create a personalized action plan.
 
 USER PROFILE:
@@ -926,40 +958,26 @@ Create a response with EXACTLY this structure (use markdown):
 
 Keep response under 300 words. Use **bold** for numbers. Be specific and actionable.`;
 
-    const step3Response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: step3Prompt }]
-      })
+    const step3Result = await callAI(models.step3, step3Prompt, 1000, fallbackApiKey);
+    pipelineResults.step3_advice = step3Result.text;
+    pipelineResults.modelSequence.push({
+      model: useDedalus ? 'claude-sonnet-4' : 'claude-sonnet-4',
+      task: 'Personalized Advice',
+      status: 'complete',
+      latency: `${((Date.now() - step3Start) / 1000).toFixed(2)}s`,
+      provider: step3Result.provider
     });
-    
-    if (step3Response.ok) {
-      const step3Data = await step3Response.json();
-      pipelineResults.step3_advice = step3Data.content[0]?.text || '';
-      pipelineResults.modelSequence.push({
-        model: 'claude-sonnet-4',
-        task: 'Personalized Advice',
-        status: 'complete',
-        latency: '1.2s'
-      });
-    }
-    
-    // Calculate summary metrics
+
+    // ========== BUILD RESPONSE (same format as before) ==========
     const potentialSavings = pipelineResults.step2_patterns?.totalPotentialSavings || 
-                            (totalSubCost * 0.3); // Default 30% potential savings
+                            (totalSubCost * 0.3);
     
     res.json({
       success: true,
       pipeline: {
+        mode: useDedalus ? 'dedalus-multi-model' : 'anthropic-fallback',
         modelsUsed: pipelineResults.modelSequence,
-        totalLatency: '2.3s'
+        totalLatency: pipelineResults.modelSequence.reduce((sum, m) => sum + parseFloat(m.latency), 0).toFixed(2) + 's'
       },
       analysis: {
         categorization: pipelineResults.step1_categorization,
