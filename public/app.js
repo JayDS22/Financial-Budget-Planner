@@ -672,7 +672,7 @@ function renderSubscriptionHub() {
             '<span style="font-size:14px;font-weight:600;color:var(--green)">Good Value</span>' +
             '<span style="font-size:12px;color:var(--t3)">(' + keepSubs.length + ' subscriptions · $' + keepTotal.toFixed(2) + '/mo)</span>' +
           '</div>' +
-          '<span style="color:var(--t3);font-size:12px" id="keep-toggle-icon">' + (state.showKeepSubs ? 'â–¼ Hide' : 'â–¶ Show') + '</span>' +
+'<span style="color:var(--t3);font-size:12px" id="keep-toggle-icon">' + (state.showKeepSubs ? '▼ Hide' : '▶ Show') + '</span>' +
         '</div>' +
         '<div id="keep-subs-list" style="display:' + (state.showKeepSubs ? 'flex' : 'none') + ';flex-direction:column;gap:8px;margin-top:14px">' +
           keepSubs.map(function(sub) { return renderCompactSubRow(sub, 'keep'); }).join('') +
@@ -1267,7 +1267,7 @@ function renderOrchestratorModal() {
   
   // Model pipeline visualization
   const models = [
-    { id: 1, name: 'Claude Haiku', task: 'Categorizing transactions...', icon: 'âš¡', color: '#3ddba0' },
+    { id: 1, name: 'Claude Haiku', task: 'Categorizing transactions...', icon: '⚡', color: '#3ddba0' },
     { id: 2, name: 'GPT-4o-mini', task: 'Detecting patterns...', icon: '🔍', color: '#5b8cff' },
     { id: 3, name: 'Claude Sonnet', task: 'Generating advice...', icon: '🧠', color: '#b07cff' }
   ];
