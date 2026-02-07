@@ -254,13 +254,6 @@ function renderSidebar(){
         '<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1A1F71,#2E348F);font-size:16px;font-weight:700;color:#fff">V</div>' +
         '<span style="font-size:18px;font-weight:700;color:#1A1F71">VisionFi</span>' +
       '</div>' +
-<<<<<<< Updated upstream
-      // '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#FFFFFF;border-radius:8px;border:1px solid rgba(26,31,113,0.1);box-shadow:0 2px 8px rgba(26,31,113,0.06)">' +
-      //   '<span style="font-size:10px;color:#4A5090;font-weight:500">Powered by</span>' +
-      //   '<img src="icons/Visa.svg" alt="Visa" style="height:16px" onerror="this.style.display=\'none\'" />' +
-      // '</div>' +
-=======
->>>>>>> Stashed changes
     '</div>' +
     '<div style="flex:1;padding:16px 12px;overflow-y:auto">' +
       '<div style="font-size:10px;color:#7A80B0;text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:10px;font-weight:600">Menu</div>' +
@@ -1110,13 +1103,6 @@ return '<div onclick="if(event.target===this)closeSmartFeaturesPanel()" style="p
       '</div>' +
       '<div style="padding:16px 20px;border-top:1px solid rgba(26,31,113,0.08);background:#FFFFFF">' +
         '<div style="font-size:11px;color:#7A80B0;text-align:center;line-height:1.5;margin-bottom:12px">Features run automatically in the background to help you save money.</div>' +
-<<<<<<< Updated upstream
-        // '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:linear-gradient(135deg,#1A1F71,#2E348F);border-radius:8px">' +
-        //   '<span style="font-size:10px;color:rgba(255,255,255,0.8)">Secured by</span>' +
-        //   '<img src="icons/Visa.svg" alt="Visa" style="height:18px;filter:brightness(0) invert(1)" onerror="this.style.display=\'none\'" />' +
-        // '</div>' +
-=======
->>>>>>> Stashed changes
       '</div>' +
     '</div>' +
   '</div>' +
