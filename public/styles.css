@@ -1,6 +1,3 @@
-/* ===== VISA LIGHT THEME ===== */
-/* Brand Colors: Deep Blue #1A1F71, Gold #F7B600 */
-
 :root {
   /* Light backgrounds */
   --bg0: #FFFFFF;
@@ -1138,7 +1135,6 @@ a:hover { color: var(--blue-light); }
   .smart-features-panel { width: 100%; }
 }
 
-/* ===== VISA BRANDED ACCENTS ===== */
 /* Gold accent for important elements */
 .visa-accent {
   border-left: 4px solid var(--gold);

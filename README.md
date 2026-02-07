@@ -16,10 +16,4 @@ Go to local host to test
 
 ### Deployment on Railway
 
-For VISA
-`https://visionfi-visa.up.railway.app/`
-
-For Capital One
-`https://visionfi-capitalone.up.railway.app/`
-
-These will follow the visa and capitalone branch of the code
+`https://visionfi-prod.up.railway.app/`
