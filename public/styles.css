@@ -422,3 +422,28 @@ input,select,button,textarea{font-family:inherit}input:focus,select:focus,textar
   flex-shrink:0;
 }
 .intake-hint::before{content:'👆'}
+
+/* ========== DAILY BRIEFING ========== */
+.briefing-card {
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.briefing-card:hover {
+  border-color: rgba(91, 140, 255, 0.25);
+}
+
+/* Briefing dismiss button hover */
+.briefing-card button:hover {
+  color: var(--t1);
+}

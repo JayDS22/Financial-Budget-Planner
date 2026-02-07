@@ -8,6 +8,8 @@ let state={
   page:'landing',
   authMode:'register',
   tab:'dashboard',
+  briefingData:null,
+  showBriefing:true,
   currentUser:null,
   users:[],
   dashData:null,
@@ -50,7 +52,18 @@ async function api(m,p,b){
 
 async function loadDashboard(uid){
   state.loading=true;render();
-  try{state.dashData=await api('GET','/api/dashboard/'+uid);state.currentUser=state.dashData.user}
+  try{
+    state.dashData=await api('GET','/api/dashboard/'+uid);
+    state.currentUser=state.dashData.user;
+    // Load briefing data
+    try{
+      state.briefingData=await api('GET','/api/briefing/'+uid);
+      state.showBriefing=true;
+    }catch(e){
+      console.log('Briefing load failed:',e);
+      state.briefingData=null;
+    }
+  }
   catch(e){state.error=e.message}
   state.loading=false;render();
 }
@@ -156,6 +169,126 @@ function renderSidebar(){
   return'<div class="sidebar" style="width:240px;min-height:100vh;background:var(--bg1);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:16px 10px;position:fixed;left:0;top:0;z-index:50"><div style="display:flex;align-items:center;gap:8;padding:7px 11px;margin-bottom:26px"><div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:14px;font-weight:700;color:#fff">V</div><span style="font-size:16px;font-weight:700">VisionFi</span></div><div style="flex:1;display:flex;flex-direction:column;gap:2px">'+tabs.map(function(t){return'<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:9;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(state.tab===t.id?'var(--blue-g)':'transparent')+';color:'+(state.tab===t.id?'var(--blue)':'var(--t2)')+';font-size:13px;font-weight:'+(state.tab===t.id?600:400)+';font-family:inherit"><span>'+t.i+'</span>'+t.l+'</button>'}).join('')+'</div><div style="position:relative"><div id="user-menu" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:5px;background:var(--bg3);border:1px solid var(--bd2);border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'+state.users.map(function(usr){return'<button onclick="switchUser(\''+usr.id+'\')" style="display:flex;align-items:center;gap:8;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:'+(usr.id===u.id?'var(--blue-g)':'transparent')+';color:var(--t1);font-size:11px;text-align:left;font-family:inherit"><span style="font-size:17px">'+usr.avatar+'</span><div><div style="font-weight:500">'+usr.name+'</div><div style="font-size:9px;color:var(--t3)">'+(usr.tier==='premium'?'★ Premium':'Free')+'</div></div></button>'}).join('')+'<div style="height:1px;background:var(--bd);margin:4px 0"></div><button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:7;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:transparent;color:var(--red);font-size:11px;text-align:left;font-family:inherit">🚪 Sign Out</button></div><button onclick="var m=document.getElementById(\'user-menu\');m.style.display=m.style.display===\'block\'?\'none\':\'block\'" style="display:flex;align-items:center;gap:8;padding:9px;border-radius:10px;border:1px solid var(--bd);cursor:pointer;width:100%;background:var(--bg2);color:var(--t1);text-align:left;font-family:inherit"><span style="font-size:20px">'+u.avatar+'</span><div style="flex:1"><div style="font-size:11px;font-weight:600">'+u.name+'</div><div style="font-size:9px;color:var(--t3)">'+(u.tier==='premium'?'★ Premium':'Free')+'</div></div><span style="color:var(--t3)">▾</span></button></div></div>';
 }
 
+// ========== DAILY BRIEFING (Floating Collapsible) ==========
+function renderBriefing(){
+  if(!state.briefingData)return'';
+  
+  // If dismissed, show a small "Show Briefing" button
+  if(!state.showBriefing){
+    return'<button onclick="set({showBriefing:true})" style="position:fixed;top:20px;right:280px;z-index:200;padding:10px 16px;border-radius:12px;border:1px solid var(--bd);background:var(--bg2);color:var(--t2);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all 0.2s" onmouseover="this.style.background=\'var(--bg3)\';this.style.color=\'var(--t1)\'" onmouseout="this.style.background=\'var(--bg2)\';this.style.color=\'var(--t2)\'">'+
+      '<span>📊</span> Show Daily Briefing'+
+    '</button>';
+  }
+  
+  var b=state.briefingData;
+  var y=b.yesterday;
+  var g=b.goalProgress;
+  
+  return'<div class="briefing-overlay" style="position:fixed;top:0;left:240px;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:150;display:flex;align-items:flex-start;justify-content:center;padding-top:40px;animation:fadeIn 0.3s" onclick="if(event.target===this)dismissBriefing()">'+
+    '<div class="briefing-card" style="width:90%;max-width:700px;padding:24px;border-radius:20px;background:var(--bg2);border:1px solid var(--bd);box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:slideDown 0.4s ease-out" onclick="event.stopPropagation()">'+
+      
+      // Header with dismiss
+      '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">'+
+        '<div>'+
+          '<h2 style="font-size:24px;font-weight:700;margin-bottom:4px">'+b.emoji+' '+b.greeting+', '+b.userName+'!</h2>'+
+          '<p style="font-size:13px;color:var(--t3)">Here\'s your daily financial snapshot</p>'+
+        '</div>'+
+        '<button onclick="dismissBriefing()" style="background:var(--bg3);border:1px solid var(--bd);color:var(--t2);cursor:pointer;font-size:12px;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:6px;transition:all 0.2s" onmouseover="this.style.background=\'var(--red-g)\';this.style.color=\'var(--red)\';this.style.borderColor=\'var(--red)\'" onmouseout="this.style.background=\'var(--bg3)\';this.style.color=\'var(--t2)\';this.style.borderColor=\'var(--bd)\'">'+
+          '<span>✕</span> Dismiss'+
+        '</button>'+
+      '</div>'+
+      
+      // Yesterday + Upcoming Bills row
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">'+
+        // Yesterday section
+        '<div style="padding:16px;background:var(--bg1);border-radius:14px;border:1px solid var(--bd)">'+
+          '<div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">📊 Yesterday</div>'+
+          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
+            '<span style="font-size:28px;font-weight:700">'+fmt(y.spent)+'</span>'+
+            '<span class="badge" style="padding:6px 10px;background:'+(y.underBudget?'var(--green-g)':'var(--red-g)')+';color:'+(y.underBudget?'var(--green)':'var(--red)')+';font-size:11px">'+(y.underBudget?'✓ Under budget':'⚠ Over budget')+'</span>'+
+          '</div>'+
+          (y.transactions.length>0?
+            '<div style="font-size:12px;color:var(--t2)">'+
+              y.transactions.map(function(tx){
+                return'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--bd)">'+
+                  '<span>'+tx.icon+' '+tx.name+'</span>'+
+                  '<span class="mono" style="color:var(--t1)">'+fmt(Math.abs(tx.amount))+'</span>'+
+                '</div>';
+              }).join('')+
+            '</div>'
+            :'<div style="font-size:12px;color:var(--t3);font-style:italic">No transactions yesterday</div>'
+          )+
+        '</div>'+
+        
+        // Upcoming bills section
+        '<div style="padding:16px;background:var(--bg1);border-radius:14px;border:1px solid var(--bd)">'+
+          '<div style="font-size:11px;color:'+(b.upcomingBills.length>0?'var(--yellow)':'var(--green)')+';text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">'+(b.upcomingBills.length>0?'⚠️ Upcoming Bills':'✅ All Clear')+'</div>'+
+          (b.upcomingBills.length>0?
+            b.upcomingBills.map(function(bill){
+              var urgencyColor=bill.daysUntil<=2?'var(--red)':bill.daysUntil<=5?'var(--yellow)':'var(--t2)';
+              var urgencyBg=bill.daysUntil<=2?'var(--red-g)':bill.daysUntil<=5?'rgba(255,184,77,0.1)':'transparent';
+              return'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;margin-bottom:6px;background:'+urgencyBg+';border-radius:8px">'+
+                '<div style="display:flex;align-items:center;gap:8px">'+
+                  '<span style="font-size:16px">'+bill.icon+'</span>'+
+                  '<span style="font-size:13px;font-weight:500">'+bill.name+'</span>'+
+                '</div>'+
+                '<div style="text-align:right">'+
+                  '<div class="mono" style="font-size:14px;font-weight:600">'+fmt(bill.amount)+'</div>'+
+                  '<div style="font-size:10px;color:'+urgencyColor+';font-weight:500">'+(bill.daysUntil===0?'Due Today!':bill.daysUntil===1?'Tomorrow':'In '+bill.daysUntil+' days')+'</div>'+
+                '</div>'+
+              '</div>';
+            }).join('')
+            :'<div style="font-size:13px;color:var(--green);padding:10px 0">🎉 No bills due this week!</div>'
+          )+
+        '</div>'+
+      '</div>'+
+      
+      // Tip + Goal row
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
+        // Smart tip
+        '<div style="padding:16px;background:linear-gradient(135deg,rgba(61,219,160,0.1),rgba(61,219,160,0.05));border-radius:14px;border:1px solid rgba(61,219,160,0.2)">'+
+          '<div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">💡 Today\'s Tip</div>'+
+          '<div style="font-size:14px;font-weight:600;margin-bottom:6px;color:var(--t1)">'+b.tip.text+'</div>'+
+          '<div style="font-size:12px;color:var(--t3);margin-bottom:8px">'+b.tip.detail+'</div>'+
+          '<div style="display:inline-block;padding:6px 12px;background:var(--green-g);border-radius:6px;font-size:13px;color:var(--green);font-weight:600">Save '+fmt(b.tip.savings)+'</div>'+
+        '</div>'+
+        
+        // Goal progress
+        '<div style="padding:16px;background:var(--bg1);border-radius:14px;border:1px solid var(--bd)">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+            '<div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px">🎯 '+g.name+'</div>'+
+            '<div style="font-size:14px;font-weight:700;color:var(--blue)">'+g.percentage+'%</div>'+
+          '</div>'+
+          '<div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:10px">'+
+            '<div style="height:100%;width:'+g.percentage+'%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:5px"></div>'+
+          '</div>'+
+          '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">'+
+            '<span style="color:var(--t1);font-weight:500">'+fmt(g.current)+'</span>'+
+            '<span style="color:var(--t3)">'+fmt(g.target)+'</span>'+
+          '</div>'+
+          '<div style="font-size:12px;color:var(--blue)">📈 Save '+fmt(g.dailyTarget)+' today to stay on track</div>'+
+        '</div>'+
+      '</div>'+
+      
+      // Footer with quick actions
+      '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">'+
+        '<span style="font-size:11px;color:var(--t3)">Click outside or press Dismiss to close</span>'+
+        '<div style="display:flex;gap:8px">'+
+          '<button onclick="set({tab:\'insights\',showBriefing:false})" class="btn btn-g" style="font-size:12px;padding:8px 14px">View Insights</button>'+
+          '<button onclick="dismissBriefing()" class="btn btn-p" style="font-size:12px;padding:8px 14px">Got it! 👍</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+function dismissBriefing(){
+  state.showBriefing=false;
+  render();
+}
+window.dismissBriefing=dismissBriefing;
+
+// ========== DASHBOARD ==========
 // ========== DASHBOARD ==========
 function renderDashboard(){
   var d=state.dashData;if(!d)return'';
@@ -163,7 +296,18 @@ function renderDashboard(){
   var icons={'Housing':'🏠','Food & Dining':'🍽️','Transport':'🚗','Entertainment':'🎬','Shopping':'🛍️','Subscriptions':'📱','Healthcare':'🏥','Utilities':'💡'};
   var colors={'Housing':'#5b8cff','Food & Dining':'#3ddba0','Transport':'#ffb84d','Entertainment':'#b07cff','Shopping':'#ff7eb3','Subscriptions':'#4dd4c0','Healthcare':'#ff6b6b','Utilities':'#60a5fa'};
   var hr=new Date().getHours(),g=hr<12?'morning':hr<18?'afternoon':'evening';
-  return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Good '+g+', '+u.name.split(' ')[0]+'</h1><div class="grid g4" style="margin-bottom:16px">'+[{l:'Net Worth',v:fmt(s.netWorth),b:'↑ +$4,230'},{l:'Income',v:fmt(u.income),b:'Stable'},{l:'Spent',v:fmt(s.totalSpent),b:'↓ -8.2%'},{l:'Savings',v:s.savingsRate+'%',b:'↑ +5.1%'}].map(function(x){return'<div class="card"><div style="font-size:10px;color:var(--t3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">'+x.l+'</div><div style="font-size:24px;font-weight:700;letter-spacing:-1px;margin-bottom:5px">'+x.v+'</div><span class="badge" style="color:var(--green);background:var(--green-g)">'+x.b+'</span></div>'}).join('')+'</div><div class="grid g2" style="margin-bottom:16px"><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Cash Flow</h3><canvas id="chart-cf" style="width:100%;height:220px"></canvas></div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Budget Breakdown</h3><div style="display:flex;flex-direction:column;gap:9px">'+cats.map(function(c){var pct=Math.min((c.spent/c.budget)*100,100),ov=c.spent>c.budget;return'<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px">'+(icons[c.category]||'💳')+' '+c.category+'</span><span class="mono" style="font-size:10px;color:'+(ov?'var(--red)':'var(--t2)')+'">'+fmt(c.spent)+'/'+fmt(c.budget)+'</span></div><div style="height:4px;border-radius:2px;background:rgba(255,255,255,.04);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(ov?'var(--red)':(colors[c.category]||'var(--blue)'))+'"></div></div></div>'}).join('')+'</div></div></div><div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px"><div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:14px;font-weight:600">Transactions</h3><button class="btn btn-p btn-sm" onclick="set({showAddTx:true})">+ Add</button></div>'+d.transactions.slice(0,10).map(function(tx){return'<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 4px"><div style="display:flex;align-items:center;gap:8"><span style="font-size:14px">'+tx.icon+'</span><div><div style="font-size:12px;font-weight:500">'+tx.name+'</div><div style="font-size:9px;color:var(--t3)">'+tx.category+' · '+tx.date+'</div></div></div><span class="mono" style="font-size:12px;font-weight:600;color:'+(tx.amount>0?'var(--green)':'var(--t1)')+'">'+(tx.amount>0?'+':'')+fmt(tx.amount)+'</span></div>'}).join('')+'</div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:12px">Subscriptions · '+fmt(s.subTotal)+'/mo</h3>'+d.subscriptions.map(function(sub){return'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0"><div style="display:flex;align-items:center;gap:8"><span>'+sub.icon+'</span><div><div style="font-size:11px;font-weight:500">'+sub.name+'</div><div style="font-size:9px;color:var(--t3)">'+sub.next_date+'</div></div></div><span class="mono" style="font-size:11px;color:var(--t2)">'+fmt(sub.amount)+'</span></div>'}).join('')+'</div></div></div>';
+  
+  return '<div style="animation:fadeIn .35s">' + 
+    (state.showBriefing ? '' : '<h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Good '+g+', '+u.name.split(' ')[0]+'</h1>') + 
+    '<div class="grid g4" style="margin-bottom:16px">' +
+    [{l:'Net Worth',v:fmt(s.netWorth),b:'↑ +$4,230'},{l:'Income',v:fmt(u.income),b:'Stable'},{l:'Spent',v:fmt(s.totalSpent),b:'↓ -8.2%'},{l:'Savings',v:s.savingsRate+'%',b:'↑ +5.1%'}].map(function(x){return'<div class="card"><div style="font-size:10px;color:var(--t3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">'+x.l+'</div><div style="font-size:24px;font-weight:700;letter-spacing:-1px;margin-bottom:5px">'+x.v+'</div><span class="badge" style="color:var(--green);background:var(--green-g)">'+x.b+'</span></div>'}).join('') +
+    '</div><div class="grid g2" style="margin-bottom:16px"><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Cash Flow</h3><canvas id="chart-cf" style="width:100%;height:220px"></canvas></div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Budget Breakdown</h3><div style="display:flex;flex-direction:column;gap:9px">' +
+    cats.map(function(c){var pct=Math.min((c.spent/c.budget)*100,100),ov=c.spent>c.budget;return'<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px">'+(icons[c.category]||'💳')+' '+c.category+'</span><span class="mono" style="font-size:10px;color:'+(ov?'var(--red)':'var(--t2)')+'">'+fmt(c.spent)+'/'+fmt(c.budget)+'</span></div><div style="height:4px;border-radius:2px;background:rgba(255,255,255,.04);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(ov?'var(--red)':(colors[c.category]||'var(--blue)'))+'"></div></div></div>'}).join('') +
+    '</div></div></div><div style="display:grid;grid-template-columns:1.15fr .85fr;gap:14px"><div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:14px;font-weight:600">Transactions</h3><button class="btn btn-p btn-sm" onclick="set({showAddTx:true})">+ Add</button></div>' +
+    d.transactions.slice(0,10).map(function(tx){return'<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 4px"><div style="display:flex;align-items:center;gap:8"><span style="font-size:14px">'+tx.icon+'</span><div><div style="font-size:12px;font-weight:500">'+tx.name+'</div><div style="font-size:9px;color:var(--t3)">'+tx.category+' · '+tx.date+'</div></div></div><span class="mono" style="font-size:12px;font-weight:600;color:'+(tx.amount>0?'var(--green)':'var(--t1)')+'">'+(tx.amount>0?'+':'')+fmt(tx.amount)+'</span></div>'}).join('') +
+    '</div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:12px">Subscriptions · '+fmt(s.subTotal)+'/mo</h3>' +
+    d.subscriptions.map(function(sub){return'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0"><div style="display:flex;align-items:center;gap:8"><span>'+sub.icon+'</span><div><div style="font-size:11px;font-weight:500">'+sub.name+'</div><div style="font-size:9px;color:var(--t3)">'+sub.next_date+'</div></div></div><span class="mono" style="font-size:11px;color:var(--t2)">'+fmt(sub.amount)+'</span></div>'}).join('') +
+    '</div></div></div>';
 }
 
 // ========== MODAL ==========
@@ -186,8 +330,8 @@ function render(){
       (state.tab==='investments'?renderInvestments():'')+
       (state.tab==='insights'?renderInsights():'')+
       (state.tab==='predictions'?renderPredictions():'')+
-    '</main>'+renderChat()+renderModal();
-  }
+    '</main>'+renderBriefing()+renderChat()+renderModal();  // <-- MOVE renderBriefing() HERE
+}
   
   root.innerHTML=html;
   

@@ -170,6 +170,213 @@ app.get('/api/dashboard/:userId', (req, res) => {
   });
 });
 
+// ========== DAILY BRIEFING ENDPOINT ==========
+app.get('/api/briefing/:userId', (req, res) => {
+  const uid = req.params.userId;
+  
+  // Get user data
+  const u = query(`SELECT * FROM users WHERE id=?`, [uid]);
+  if (!u.length) return res.status(404).json({ error: 'User not found' });
+  const user = u[0];
+  
+  // Get transactions
+  const transactions = query(`SELECT * FROM transactions WHERE user_id=? ORDER BY date DESC`, [uid]);
+  
+  // Get subscriptions and loans for upcoming bills
+  const subscriptions = query(`SELECT * FROM subscriptions WHERE user_id=?`, [uid]);
+  const loans = query(`SELECT * FROM loans WHERE user_id=?`, [uid]);
+  
+  // Calculate yesterday's date
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  
+  // Get yesterday's transactions
+  const yesterdayTx = transactions.filter(tx => tx.date === yesterdayStr && tx.amount < 0);
+  const yesterdaySpent = yesterdayTx.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+  
+  // Calculate daily budget (70% of monthly income / 30 days)
+  const dailyBudget = (user.income * 0.7) / 30;
+  const underBudget = yesterdaySpent <= dailyBudget;
+  
+  // Get upcoming bills (next 7 days)
+  const upcomingBills = [];
+  
+  // Check subscriptions
+  subscriptions.forEach(sub => {
+    const nextDate = new Date(sub.next_date);
+    const daysUntil = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
+    if (daysUntil >= 0 && daysUntil <= 7) {
+      upcomingBills.push({
+        name: sub.name,
+        amount: sub.amount,
+        daysUntil: daysUntil,
+        type: 'subscription',
+        icon: sub.icon
+      });
+    }
+  });
+  
+  // Check loan EMIs
+  loans.forEach(loan => {
+    const emiDate = new Date(loan.next_emi_date);
+    const daysUntil = Math.ceil((emiDate - today) / (1000 * 60 * 60 * 24));
+    if (daysUntil >= 0 && daysUntil <= 7) {
+      upcomingBills.push({
+        name: loan.loan_name + ' EMI',
+        amount: loan.emi_amount,
+        daysUntil: daysUntil,
+        type: 'loan',
+        icon: '🏦'
+      });
+    }
+  });
+  
+  // Sort by days until due
+  upcomingBills.sort((a, b) => a.daysUntil - b.daysUntil);
+  
+  // Generate smart tip based on spending patterns
+  const tip = generateSmartTip(transactions, upcomingBills, user);
+  
+  // Calculate goal progress (simplified - could be enhanced with goals table)
+  const goalProgress = calculateGoalProgress(user, transactions);
+  
+  // Determine greeting
+  const hour = today.getHours();
+  let greeting, emoji;
+  if (hour < 12) {
+    greeting = 'Good morning';
+    emoji = '☀️';
+  } else if (hour < 17) {
+    greeting = 'Good afternoon';
+    emoji = '🌤️';
+  } else {
+    greeting = 'Good evening';
+    emoji = '🌙';
+  }
+  
+  res.json({
+    greeting,
+    emoji,
+    userName: user.name.split(' ')[0],
+    yesterday: {
+      spent: Math.round(yesterdaySpent * 100) / 100,
+      transactions: yesterdayTx.slice(0, 3),
+      dailyBudget: Math.round(dailyBudget * 100) / 100,
+      underBudget
+    },
+    upcomingBills: upcomingBills.slice(0, 3),
+    tip,
+    goalProgress
+  });
+});
+
+// Helper: Generate smart tip based on user's spending patterns
+function generateSmartTip(transactions, upcomingBills, user) {
+  // Find frequent small purchases (last 30 days)
+  const recentTx = transactions.filter(tx => tx.amount < 0).slice(0, 50);
+  const merchantCounts = {};
+  const merchantTotals = {};
+  
+  recentTx.forEach(tx => {
+    const name = tx.name;
+    merchantCounts[name] = (merchantCounts[name] || 0) + 1;
+    merchantTotals[name] = (merchantTotals[name] || 0) + Math.abs(tx.amount);
+  });
+  
+  // Find most frequent small purchase
+  let topMerchant = null;
+  let topCount = 0;
+  let topTotal = 0;
+  
+  Object.keys(merchantCounts).forEach(name => {
+    const avgAmount = merchantTotals[name] / merchantCounts[name];
+    if (merchantCounts[name] >= 3 && avgAmount < 20 && merchantCounts[name] > topCount) {
+      topMerchant = name;
+      topCount = merchantCounts[name];
+      topTotal = merchantTotals[name];
+    }
+  });
+  
+  // Generate tip
+  if (topMerchant && upcomingBills.length > 0) {
+    const avgSpend = Math.round(topTotal / topCount * 100) / 100;
+    return {
+      text: `Skip ${topMerchant} today → Extra buffer for ${upcomingBills[0].name}`,
+      detail: `You've visited ${topCount} times this month ($${topTotal.toFixed(2)} total)`,
+      savings: avgSpend
+    };
+  } else if (topMerchant) {
+    const avgSpend = Math.round(topTotal / topCount * 100) / 100;
+    return {
+      text: `Reduce ${topMerchant} visits to boost savings`,
+      detail: `${topCount} visits this month averaging $${avgSpend.toFixed(2)} each`,
+      savings: avgSpend
+    };
+  }
+  
+  // Default tip
+  return {
+    text: 'Pack lunch today instead of eating out',
+    detail: 'Small daily savings add up quickly',
+    savings: 12
+  };
+}
+
+// Helper: Calculate goal progress
+function calculateGoalProgress(user, transactions) {
+  const goal = user.goal || 'General';
+  
+  // Calculate current savings (simplified)
+  const income = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const expenses = transactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const currentSavings = Math.max(0, income - expenses);
+  
+  // Set target based on goal
+  let target, current, dailyTarget;
+  
+  switch (goal) {
+    case 'Emergency Fund':
+      target = user.income * 6; // 6 months expenses
+      current = Math.min(currentSavings * 10, target * 0.7); // Simulated progress
+      dailyTarget = Math.round((target - current) / 180); // 6 months to reach
+      break;
+    case 'Save for House':
+      target = 60000; // Down payment goal
+      current = Math.min(currentSavings * 8, target * 0.45);
+      dailyTarget = Math.round((target - current) / 365);
+      break;
+    case 'Debt Freedom':
+      target = 50000; // Total debt to pay
+      current = Math.min(currentSavings * 6, target * 0.35);
+      dailyTarget = Math.round((target - current) / 730);
+      break;
+    case 'Financial Independence':
+      target = user.income * 25; // 25x annual expenses
+      current = Math.min(currentSavings * 15, target * 0.12);
+      dailyTarget = Math.round((target - current) / 3650);
+      break;
+    case 'Retirement':
+      target = 500000;
+      current = Math.min(currentSavings * 20, target * 0.25);
+      dailyTarget = Math.round((target - current) / 7300);
+      break;
+    default:
+      target = 10000;
+      current = Math.min(currentSavings * 3, target * 0.6);
+      dailyTarget = 15;
+  }
+  
+  return {
+    name: goal,
+    current: Math.round(current),
+    target: Math.round(target),
+    percentage: Math.round((current / target) * 100),
+    dailyTarget
+  };
+}
+
 app.post('/api/transactions', (req,res) => {
   const {user_id,name,amount,category,icon,date,type}=req.body;
   const id=uuidv4();
