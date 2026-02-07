@@ -10,7 +10,7 @@ function renderPredictions(){
   };
   var s=summ[p];
   
-  return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:18px">Budget Predictions</h1><div style="display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--bg1);margin-bottom:18px;border:1px solid var(--bd)">'+['daily','weekly','monthly'].map(function(pp){
+  return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:18px">Predictions</h1><div style="display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--bg1);margin-bottom:18px;border:1px solid var(--bd)">'+['daily','weekly','monthly'].map(function(pp){
     return'<button onclick="set({predPeriod:\''+pp+'\'})" style="padding:8px 20px;border-radius:7px;border:none;cursor:pointer;background:'+(p===pp?'var(--bg2)':'transparent')+';color:'+(p===pp?'var(--t1)':'var(--t3)')+';font-size:11px;font-weight:'+(p===pp?600:400)+';text-transform:capitalize;font-family:inherit">'+pp+'</button>';
   }).join('')+'</div><div class="grid g4" style="margin-bottom:18px">'+[
     {l:'Predicted',v:s.pred,i:'📊',c:'var(--blue)'},

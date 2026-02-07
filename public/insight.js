@@ -10,7 +10,7 @@ var INSIGHTS=[
 ];
 
 function renderInsights(){
-  return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Insights</h1><div style="display:flex;flex-direction:column;gap:9px">'+INSIGHTS.map(function(ins){
-    return'<div class="card" style="display:flex;gap:12px;border-left:3px solid '+(ins.type==='warn'?'var(--amber)':ins.type==='good'?'var(--green)':'var(--blue)')+'"><div style="font-size:20px">'+(ins.type==='warn'?'⚠️':ins.type==='good'?'✅':'💡')+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">'+ins.title+'</div><div style="font-size:11px;color:var(--t2)">'+ins.desc+'</div>'+(ins.save?'<span class="badge" style="margin-top:6px;background:var(--green-g);color:var(--green)">💰 '+fmt(ins.save)+'/mo</span>':'')+'</div></div>';
+  return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Insights</h1><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px">'+INSIGHTS.map(function(ins){
+    return'<div class="card" style="display:flex;flex-direction:column;gap:10px;border-top:3px solid '+(ins.type==='warn'?'var(--amber)':ins.type==='good'?'var(--green)':'var(--blue)')+';text-align:center;padding:18px 14px"><div style="font-size:24px;margin-bottom:4px">'+(ins.type==='warn'?'⚠️':ins.type==='good'?'✅':'💡')+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:4px">'+ins.title+'</div><div style="font-size:11px;color:var(--t2);line-height:1.4">'+ins.desc+'</div>'+(ins.save?'<span class="badge" style="margin-top:10px;background:var(--green-g);color:var(--green)">💰 '+fmt(ins.save)+'/mo</span>':'')+'</div></div>';
   }).join('')+'</div></div>';
 }

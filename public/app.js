@@ -186,8 +186,7 @@ function renderSidebar(){
     {id:'subscriptions',l:'Subscriptions',i:'📱'},
     {id:'credit',l:'Credit & Loans',i:'💳'},
     {id:'investments',l:'Investments',i:'📈'},
-    {id:'insights',l:'Insights',i:'💡'},
-    {id:'predictions',l:'Predictions',i:'🔮'}
+    {id:'insights&predictions',l:'Insights & Predictions',i:'💡'}
   ];
   
   var stats = (typeof getSmartFeatureStats === 'function') ? getSmartFeatureStats() : {activeCount: 0, totalSaved: 0};
@@ -774,11 +773,9 @@ function render(){
       (state.tab==='subscriptions'?renderSubscriptionHub():'')+
       (state.tab==='credit'?renderCredit():'')+
       (state.tab==='investments'?renderInvestments():'')+
-      (state.tab==='insights'?renderInsights():'')+
+      (state.tab==='insights&predictions'?renderInsights()+'<div style="height: 40px;"></div>'+renderPredictions():'')+
       (state.tab==='automations'?(typeof renderAutomationsTab==='function'?renderAutomationsTab():''):'')+
-      (state.tab==='predictions'?renderPredictions():'')+
-    // '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal();
-     '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal()+(typeof renderAutomationModal==='function'?renderAutomationModal():'')+(typeof renderSmartFeaturesPanel==='function'?renderSmartFeaturesPanel():'');
+      '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal()+(typeof renderAutomationModal==='function'?renderAutomationModal():'')+(typeof renderSmartFeaturesPanel==='function'?renderSmartFeaturesPanel():'');
   }
   
   root.innerHTML=html;
