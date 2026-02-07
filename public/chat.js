@@ -87,7 +87,7 @@ function selectChatGoal(goalId){
   state.chatMessages.push({role:'system',text:goal.icon+' '+goal.label+' selected'});
   state.chatMessages.push({role:'ai',text:"Great choice! I'll ask you "+INTAKE_QUESTIONS[goalId].length+" quick questions to personalize your plan. Let's start! 👇"});
   state.chatScrollNeeded=true;
-  renderChatContainer();
+  render();
   requestAnimationFrame(function(){
     var cb=document.querySelector('.chat-body');
     if(cb)cb.scrollTop=cb.scrollHeight;
@@ -288,7 +288,7 @@ function renderChat(){
         '</div>'+
         '<div style="display:flex;gap:6px">'+
           ((state.chatPhase==='chatting'||state.chatPhase==='intake')?'<button onclick="resetChatGoal()" style="background:var(--bg1);border:1px solid var(--bd);color:var(--t2);cursor:pointer;font-size:11px;padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:4px;transition:all .2s" title="New Goal"><span style="font-size:12px">🔄</span>New</button>':'')+
-          '<button onclick="state.showApiSetup=!state.showApiSetup;renderChatContainer()" style="background:var(--bg1);border:1px solid var(--bd);color:var(--t2);cursor:pointer;font-size:14px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .2s" title="Settings">⚙️</button>'+
+          '<button onclick="state.showApiSetup=!state.showApiSetup;render()" style="background:var(--bg1);border:1px solid var(--bd);color:var(--t2);cursor:pointer;font-size:14px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .2s" title="Settings">⚙️</button>'+
           '<button onclick="set({chatOpen:false})" style="background:var(--bg1);border:1px solid var(--bd);color:var(--t3);cursor:pointer;font-size:14px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .2s" title="Close">✕</button>'+
         '</div>'+
       '</div>'+
