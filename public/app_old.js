@@ -1,16 +1,7 @@
-// VisionFi Frontend — app.js (with Goal-Based AI Chatbot)
+// VisionFi Frontend — app.js
 const API='';
-let state={page:'landing',authMode:'register',tab:'dashboard',currentUser:null,users:[],dashData:null,chatOpen:false,chatSending:false,chatMessages:[],chatHistory:[],showApiSetup:false,investSub:'stocks',predPeriod:'daily',showAddTx:false,creditSub:'overview',expandedStock:null,stockPeriod:{},expandedFund:null,fundPeriod:{},expandedBond:null,bondPeriod:{},chatGoal:null,chatPhase:'goal_select'};
+let state={page:'landing',authMode:'register',tab:'dashboard',currentUser:null,users:[],dashData:null,chatOpen:false,chatSending:false,chatMessages:[{role:'ai',text:"Hi! I'm VisionFi AI 🤖 powered by Claude. Ask about budget, credit, loans, or investments!"}],chatHistory:[],showApiSetup:false,investSub:'stocks',predPeriod:'daily',showAddTx:false,creditSub:'overview',expandedStock:null,stockPeriod:{},expandedFund:null,fundPeriod:{},expandedBond:null,bondPeriod:{}};
 let apiKey=localStorage.getItem('visionfi_api_key')||'';
-
-const GOALS=[
-  {id:'Financial Independence',icon:'🏦',label:'Financial Independence',desc:'Build wealth to live on passive income',color:'#5b8cff'},
-  {id:'Retirement',icon:'🌴',label:'Retirement Planning',desc:'Secure your future with smart savings',color:'#3ddba0'},
-  {id:'Debt Freedom',icon:'⛓️',label:'Debt Freedom',desc:'Eliminate all debt strategically',color:'#ff6b6b'},
-  {id:'Save for House',icon:'🏠',label:'Save for House',desc:'Build your down payment fund',color:'#ffb84d'},
-  {id:'Emergency Fund',icon:'🛡️',label:'Emergency Fund',desc:'Build a safety net for surprises',color:'#b07cff'}
-];
-
 const fmt=v=>{const n=Math.abs(v);return(v<0?'-':'')+'$'+n.toFixed(n%1===0?0:2).replace(/\B(?=(\d{3})+(?!\d))/g,',')};
 async function api(m,p,b){const o={method:m,headers:{'Content-Type':'application/json'}};if(b)o.body=JSON.stringify(b);const r=await fetch(API+p,o);const d=await r.json();if(!r.ok)throw new Error(d.error||'Failed');return d}
 async function loadDashboard(uid){state.loading=true;render();try{state.dashData=await api('GET','/api/dashboard/'+uid);state.currentUser=state.dashData.user}catch(e){state.error=e.message}state.loading=false;render()}
@@ -19,70 +10,6 @@ function showToast(m,t){const e=document.createElement('div');e.className='toast
 function set(u){Object.assign(state,u);render()}
 function scoreColor(s){return s>=750?'var(--green)':s>=700?'var(--blue)':s>=650?'var(--amber)':'var(--red)'}
 
-// ===== MARKDOWN RENDERER =====
-function renderMarkdown(text){
-  if(!text)return'';
-  return text
-    .replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--t1)">$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:underline;text-underline-offset:2px">$1 ↗</a>')
-    .replace(/^[-•]\s+(.+)$/gm,'<div style="display:flex;gap:6px;margin:3px 0"><span style="color:var(--blue);flex-shrink:0">•</span><span>$1</span></div>')
-    .replace(/^(\d+)\.\s+(.+)$/gm,'<div style="display:flex;gap:6px;margin:3px 0"><span style="color:var(--blue);flex-shrink:0;font-weight:600;min-width:16px">$1.</span><span>$2</span></div>')
-    .replace(/\n\n/g,'<div style="height:8px"></div>')
-    .replace(/\n/g,'<br>');
-}
-
-// ===== BUILD FULL CONTEXT =====
-function buildContext(d){
-  if(!d)return'No data';
-  var ctx='User:'+d.user.name+', Income:$'+d.user.income+', Spent:$'+d.stats.totalSpent+', Savings:'+d.stats.savingsRate+'%, Subs:$'+d.stats.subTotal+'/mo, Loans:$'+d.stats.totalLoanBalance+', EMI:$'+d.stats.totalEMI+', Score:'+(d.creditReport?d.creditReport.credit_score+'('+d.creditReport.score_rating+')':'N/A')+', Util:'+(d.creditReport?d.creditReport.credit_utilization+'%':'N/A')+', CardBal:$'+d.stats.totalCreditBalance+', CreditLimit:$'+d.stats.totalCreditLimit+', Cards:'+d.stats.cardCount+', LoanCount:'+d.stats.loanCount+', NetWorth:$'+d.stats.netWorth;
-  if(d.loans&&d.loans.length){ctx+='. LOANS:';d.loans.forEach(function(l){ctx+=l.loan_name+'('+l.loan_type+') bal:$'+l.remaining_balance+' rate:'+l.interest_rate+'% EMI:$'+l.emi_amount+', '});}
-  if(d.creditCards&&d.creditCards.length){ctx+='. CARDS:';d.creditCards.forEach(function(c){ctx+=c.card_name+' bal:$'+c.current_balance+'/$'+c.credit_limit+' APR:'+c.apr+'%, '});}
-  if(d.categoryBreakdown&&d.categoryBreakdown.length){ctx+='. BUDGET:';d.categoryBreakdown.forEach(function(b){ctx+=b.category+' $'+b.spent+'/$'+b.budget+', '});}
-  if(d.subscriptions&&d.subscriptions.length){ctx+='. SUBS:';d.subscriptions.forEach(function(s){ctx+=s.name+':$'+s.amount+', '});}
-  return ctx;
-}
-
-// ===== GOAL SELECTION =====
-function selectChatGoal(goalId){
-  var goal=GOALS.find(function(g){return g.id===goalId});
-  if(!goal)return;
-  state.chatGoal=goalId;
-  state.chatPhase='chatting';
-  state.chatMessages.push({role:'system',text:goal.icon+' '+goal.label+' selected'});
-  var msg='My financial goal is: '+goal.label+'. Based on my financial data, give me a personalized action plan with specific numbers, timeline, and recommended investment platforms with links.';
-  state.chatMessages.push({role:'user',text:msg});
-  state.chatSending=true;
-  render();
-  doChat(msg);
-}
-window.selectChatGoal=selectChatGoal;
-
-function resetChatGoal(){
-  state.chatGoal=null;state.chatPhase='goal_select';state.chatMessages=[];state.chatSending=false;render();
-}
-window.resetChatGoal=resetChatGoal;
-
-async function doChat(message){
-  try{
-    var history=state.chatMessages.filter(function(m){return m.role==='user'||m.role==='ai'});
-    var data=await api('POST','/api/chat',{message:message,apiKey:apiKey,context:buildContext(state.dashData),goal:state.chatGoal,conversationHistory:history.slice(0,-1)});
-    state.chatMessages.push({role:'ai',text:data.reply});
-  }catch(e){state.chatMessages.push({role:'error',text:e.message})}
-  state.chatSending=false;render();
-  var b=document.querySelector('.chat-body');if(b)b.scrollTop=b.scrollHeight;
-}
-
-async function sendChat(){
-  var i=document.getElementById('chat-input');if(!i||state.chatSending)return;
-  var msg=i.value.trim();if(!msg)return;i.value='';
-  state.chatMessages.push({role:'user',text:msg});state.chatSending=true;render();
-  doChat(msg);
-}
-
-function saveApiKey(){var i=document.getElementById('api-key-input');if(i){apiKey=i.value.trim();localStorage.setItem('visionfi_api_key',apiKey);state.showApiSetup=false;state.chatMessages.push({role:'system',text:'✅ API Key saved!'});render()}}
-
-// Toggle functions for expandable cards
 function toggleStock(sym){state.expandedStock=state.expandedStock===sym?null:sym;if(!state.stockPeriod[sym])state.stockPeriod[sym]='1M';render()}
 function setStockPeriod(sym,p){state.stockPeriod[sym]=p;render()}
 function toggleFund(tick){state.expandedFund=state.expandedFund===tick?null:tick;if(!state.fundPeriod[tick])state.fundPeriod[tick]='1M';render()}
@@ -307,95 +234,14 @@ function renderInvestments(){
 // ==== INSIGHTS (Partners removed) ====
 function renderInsights(){return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Insights</h1><div style="display:flex;flex-direction:column;gap:9px">'+INSIGHTS.map(function(ins){return'<div class="card" style="display:flex;gap:12px;border-left:3px solid '+(ins.type==='warn'?'var(--amber)':ins.type==='good'?'var(--green)':'var(--blue)')+'"><div style="font-size:20px">'+(ins.type==='warn'?'⚠️':ins.type==='good'?'✅':'💡')+'</div><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">'+ins.title+'</div><div style="font-size:11px;color:var(--t2)">'+ins.desc+'</div>'+(ins.save?'<span class="badge" style="margin-top:6px;background:var(--green-g);color:var(--green)">💰 '+fmt(ins.save)+'/mo</span>':'')+'</div></div>'}).join('')+'</div></div>';}
 
-// ==== PREDICTIONS ====
-function renderPredictions(){var p=state.predPeriod;var summ={daily:{pred:'$142',conf:'87%',save:'$18/day',risk:'Low'},weekly:{pred:'$994',conf:'82%',save:'$106/wk',risk:'Medium'},monthly:{pred:'$4,180',conf:'78%',save:'$420/mo',risk:'Low'}};var s=summ[p];return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:18px">Budget Predictions</h1><div style="display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--bg1);margin-bottom:18px;border:1px solid var(--bd)">'+['daily','weekly','monthly'].map(function(pp){return'<button onclick="set({predPeriod:\''+pp+'\'})" style="padding:8px 20px;border-radius:7px;border:none;cursor:pointer;background:'+(p===pp?'var(--bg2)':'transparent')+';color:'+(p===pp?'var(--t1)':'var(--t3)')+';font-size:11px;font-weight:'+(p===pp?600:400)+';text-transform:capitalize;font-family:inherit">'+pp+'</button>'}).join('')+'</div><div class="grid g4" style="margin-bottom:18px">'+[{l:'Predicted',v:s.pred,i:'📊',c:'var(--blue)'},{l:'Confidence',v:s.conf,i:'🎯',c:'var(--purple)'},{l:'Savings Opp.',v:s.save,i:'💰',c:'var(--green)'},{l:'Risk Level',v:s.risk,i:'🛡️',c:s.risk==='Low'?'var(--green)':'var(--amber)'}].map(function(x){return'<div class="card pred-stat"><div style="font-size:10px;color:var(--t3);margin-bottom:7px;text-transform:uppercase">'+x.l+'</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+x.i+'</span><div class="mono" style="font-size:24px;font-weight:700;color:'+x.c+'">'+x.v+'</div></div></div>'}).join('')+'</div><div class="card chart-card"><h3 style="font-size:15px;font-weight:600;margin-bottom:18px">'+p.charAt(0).toUpperCase()+p.slice(1)+' Forecast</h3><canvas id="chart-pred" style="width:100%;height:280px"></canvas></div></div>';}
+// ==== PREDICTIONS (unchanged) ====
+function renderPredictions(){var p=state.predPeriod;var summ={daily:{pred:'$142',conf:'87%',save:'$18/day',risk:'Low',trend:'-3.2% vs last week',pDetail:'Based on 30-day spending pattern analysis',cDetail:'High confidence from consistent daily patterns',sDetail:'Reduce dining out by 1 meal/day',rDetail:'Well within budget guardrails'},weekly:{pred:'$994',conf:'82%',save:'$106/wk',risk:'Medium',trend:'+1.8% vs last month',pDetail:'Aggregated from daily transaction forecasts',cDetail:'Moderate — weekends add variance',sDetail:'Batch cook on Sundays to cut grocery trips',rDetail:'Shopping spikes possible'},monthly:{pred:'$4,180',conf:'78%',save:'$420/mo',risk:'Low',trend:'-8.2% improving',pDetail:'Income minus projected recurring expenses',cDetail:'Lower due to variable expenses',sDetail:'Automate $420 to savings on payday',rDetail:'Stable income, predictable bills'}};var s=summ[p];
+return'<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:18px">Budget Predictions</h1><div style="display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--bg1);margin-bottom:18px;border:1px solid var(--bd)">'+['daily','weekly','monthly'].map(function(pp){return'<button onclick="set({predPeriod:\''+pp+'\'})" style="padding:8px 20px;border-radius:7px;border:none;cursor:pointer;background:'+(p===pp?'var(--bg2)':'transparent')+';color:'+(p===pp?'var(--t1)':'var(--t3)')+';font-size:11px;font-weight:'+(p===pp?600:400)+';text-transform:capitalize;font-family:inherit">'+pp+'</button>'}).join('')+'</div><div class="grid g4" style="margin-bottom:18px">'+[{l:'Predicted',v:s.pred,i:'📊',c:'var(--blue)',d:s.pDetail,tr:s.trend},{l:'Confidence',v:s.conf,i:'🎯',c:'var(--purple)',d:s.cDetail,tr:'6mo data basis'},{l:'Savings Opp.',v:s.save,i:'💰',c:'var(--green)',d:s.sDetail,tr:'If optimized'},{l:'Risk Level',v:s.risk,i:'🛡️',c:s.risk==='Low'?'var(--green)':'var(--amber)',d:s.rDetail,tr:'Within budget'}].map(function(x){return'<div class="card pred-stat" style="position:relative;overflow:hidden"><div style="font-size:10px;color:var(--t3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">'+x.l+'</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span class="pred-stat-icon" style="font-size:20px">'+x.i+'</span><div class="mono pred-value" style="font-size:24px;font-weight:700;color:'+x.c+'">'+x.v+'</div></div><div style="font-size:10px;color:var(--t3)">'+x.tr+'</div><div class="pred-detail" style="font-size:10px;color:var(--t2);padding-top:6px;border-top:1px solid var(--bd)">'+x.d+'</div></div>'}).join('')+'</div><div class="card chart-card" style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><h3 style="font-size:15px;font-weight:600">'+p.charAt(0).toUpperCase()+p.slice(1)+' Forecast</h3><div style="display:flex;gap:12px">'+[{l:'Actual',c:'#5b8cff'},{l:'Predicted',c:'#b07cff'},{l:'Budget',c:'#5a5a7a'}].map(function(l){return'<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3)"><div style="width:8px;height:8px;border-radius:3px;background:'+l.c+'"></div>'+l.l+'</div>'}).join('')+'</div></div><canvas id="chart-pred" style="width:100%;height:280px"></canvas></div><div class="grid g3">'+[{i:'📉',t:'Spending Trajectory',v:'-8.2%',c:'var(--green)',d:'Trending down vs 3-month avg',det:'Your daily average dropped from $168 to $142'},{i:'🎯',t:'Goal Forecast',v:'Apr 2026',c:'var(--blue)',d:'Emergency fund target date',det:'$4,200 remaining at current $420/mo rate'},{i:'💰',t:'Projected Savings',v:'$18,240',c:'var(--amber)',d:'End-of-year estimate',det:'Based on current savings rate of 32%'}].map(function(c){return'<div class="card pred-card" style="text-align:center"><div class="pred-icon" style="font-size:30px;margin-bottom:8px">'+c.i+'</div><div style="font-size:13px;font-weight:600;margin-bottom:3px">'+c.t+'</div><div class="mono pred-value" style="font-size:24px;font-weight:700;color:'+c.c+';margin-bottom:3px">'+c.v+'</div><div style="font-size:11px;color:var(--t3)">'+c.d+'</div><div class="pred-detail" style="font-size:11px;color:var(--t2);padding-top:6px;border-top:1px solid var(--bd)">'+c.det+'</div></div>'}).join('')+'</div></div>';}
 
-// ============================================================
-// ==== CHAT WITH GOAL SELECTION (THE NEW FEATURE) ====
-// ============================================================
-function renderChat(){
-  var hasKey=!!apiKey;
-  if(!state.chatOpen) return'<button class="chat-fab" onclick="set({chatOpen:true})" title="AI Financial Advisor">🤖</button>';
-
-  // Build chat body content
-  var bodyContent='';
-
-  // API Key setup section
-  if(state.showApiSetup){
-    bodyContent+='<div style="padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--bd);margin-bottom:8px"><div style="font-size:12px;font-weight:600;margin-bottom:4px">🔑 Claude API Key</div><div style="font-size:10px;color:var(--t3);margin-bottom:6px">Get from <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--blue)">console.anthropic.com</a></div><input id="api-key-input" class="input" type="password" placeholder="sk-ant-api03-..." value="'+(apiKey||'')+'" style="font-size:12px;margin-bottom:6px"/><button class="btn btn-p btn-sm" style="width:100%" onclick="saveApiKey()">Save Key</button></div>';
-  }
-
-  // PHASE 1: Goal Selection (dropdown-style cards)
-  if(state.chatPhase==='goal_select'){
-    bodyContent+='<div class="msg msg-ai" style="max-width:100%"><div style="margin-bottom:10px">Hi! I\'m your <strong style="color:var(--blue)">VisionFi AI Advisor</strong> 🤖 powered by Claude.</div><div style="margin-bottom:10px;color:var(--t2);font-size:12px">To give you the best personalized recommendations, tell me — <strong style="color:var(--t1)">what is your financial goal?</strong></div></div>';
-
-    // Goal cards
-    bodyContent+='<div style="display:flex;flex-direction:column;gap:6px;width:100%;animation:fadeIn .4s">';
-    GOALS.forEach(function(g){
-      bodyContent+='<button class="goal-card" onclick="selectChatGoal(\''+g.id+'\')">';
-      bodyContent+='<div class="goal-icon" style="background:'+g.color+'15;border:1px solid '+g.color+'30">'+g.icon+'</div>';
-      bodyContent+='<div style="flex:1"><div style="font-size:12px;font-weight:600">'+g.label+'</div><div style="font-size:10px;color:var(--t3)">'+g.desc+'</div></div>';
-      bodyContent+='<span style="color:var(--t3);font-size:12px">→</span>';
-      bodyContent+='</button>';
-    });
-    bodyContent+='</div>';
-
-    if(!hasKey){
-      bodyContent+='<div style="margin-top:8px;padding:10px;background:var(--amber-g);border:1px solid rgba(255,184,77,.2);border-radius:8px;font-size:11px;color:var(--amber);text-align:center">⚠️ Set your Claude API key first (click ⚙️ above)</div>';
-    }
-  }
-
-  // PHASE 2: Active conversation
-  if(state.chatPhase==='chatting'){
-    // Show active goal badge
-    var activeGoal=GOALS.find(function(g){return g.id===state.chatGoal});
-    if(activeGoal){
-      bodyContent+='<div style="display:flex;justify-content:center;margin-bottom:4px"><div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:'+activeGoal.color+'15;border:1px solid '+activeGoal.color+'30;font-size:10px;font-weight:600;color:'+activeGoal.color+'"><span>'+activeGoal.icon+'</span> '+activeGoal.label+' <button onclick="resetChatGoal()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:10px;margin-left:4px" title="Change goal">✕</button></div></div>';
-    }
-
-    // Render messages
-    state.chatMessages.forEach(function(m){
-      if(m.role==='user'){
-        bodyContent+='<div class="msg msg-user">'+m.text+'</div>';
-      }else if(m.role==='error'){
-        bodyContent+='<div class="msg msg-err">⚠️ '+m.text+'</div>';
-      }else if(m.role==='system'){
-        bodyContent+='<div class="msg msg-system">'+m.text+'</div>';
-      }else if(m.role==='ai'){
-        bodyContent+='<div class="msg msg-ai">'+renderMarkdown(m.text)+'</div>';
-      }
-    });
-
-    // Typing indicator
-    if(state.chatSending){
-      bodyContent+='<div class="typing-indicator"><span></span><span></span><span></span></div>';
-    }
-  }
-
-  // Build full chat window
-  return'<button class="chat-fab" onclick="set({chatOpen:false})" style="font-size:18px">✕</button>'+
-    '<div class="chat-window">'+
-      '<div class="chat-header">'+
-        '<div style="display:flex;align-items:center;gap:8">'+
-          '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5b8cff,#b07cff);display:flex;align-items:center;justify-content:center;font-size:16px">🤖</div>'+
-          '<div><div style="font-size:13px;font-weight:600">VisionFi AI Advisor</div>'+
-          '<div style="font-size:10px;color:'+(hasKey?'var(--green)':'var(--amber)')+'">'+(hasKey?'● Connected to Claude':'● Set API Key')+'</div></div>'+
-        '</div>'+
-        '<div style="display:flex;gap:4px">'+
-          (state.chatPhase==='chatting'?'<button onclick="resetChatGoal()" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)" title="New Goal">🔄</button>':'')+
-          '<button onclick="state.showApiSetup=!state.showApiSetup;render()" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:14px" title="API Settings">⚙️</button>'+
-          '<button onclick="set({chatOpen:false})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px">✕</button>'+
-        '</div>'+
-      '</div>'+
-      '<div class="chat-body">'+bodyContent+'</div>'+
-      (state.chatPhase==='chatting'?
-        '<div class="chat-input-area">'+
-          '<input id="chat-input" placeholder="Ask follow-up questions..." onkeydown="if(event.key===\'Enter\')sendChat()"'+(state.chatSending?' disabled':'')+' />'+
-          '<button onclick="sendChat()"'+(state.chatSending?' disabled':'')+'>Send</button>'+
-        '</div>'
-      :'')+
-    '</div>';
-}
+// ==== CHAT (unchanged) ====
+function renderChat(){var hasKey=!!apiKey;if(!state.chatOpen)return'<button class="chat-fab" onclick="set({chatOpen:true})">🤖</button>';return'<button class="chat-fab" onclick="set({chatOpen:false})" style="font-size:18px">✕</button><div class="chat-window"><div class="chat-header"><div style="display:flex;align-items:center;gap:8"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5b8cff,#b07cff);display:flex;align-items:center;justify-content:center;font-size:16px">🤖</div><div><div style="font-size:13px;font-weight:600">VisionFi AI</div><div style="font-size:10px;color:'+(hasKey?'var(--green)':'var(--amber)')+'">'+(hasKey?'● Connected':'● Needs Key')+'</div></div></div><div style="display:flex;gap:4px"><button onclick="state.showApiSetup=!state.showApiSetup;render()" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:14px">⚙️</button><button onclick="set({chatOpen:false})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px">✕</button></div></div><div class="chat-body">'+(state.showApiSetup?'<div style="padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--bd);margin-bottom:8px"><div style="font-size:12px;font-weight:600;margin-bottom:4px">🔑 Claude API Key</div><div style="font-size:10px;color:var(--t3);margin-bottom:6px">Get from <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--blue)">console.anthropic.com</a></div><input id="api-key-input" class="input" type="password" placeholder="sk-ant-api03-..." value="'+(apiKey||'')+'" style="font-size:12px;margin-bottom:6px"/><button class="btn btn-p btn-sm" style="width:100%" onclick="saveApiKey()">Save</button></div>':'')+state.chatMessages.map(function(m){return m.role==='user'?'<div class="msg msg-user">'+m.text+'</div>':m.role==='error'?'<div class="msg msg-err">⚠️ '+m.text+'</div>':'<div class="msg msg-ai">'+m.text+'</div>'}).join('')+(state.chatSending?'<div class="typing-indicator"><span></span><span></span><span></span></div>':'')+'</div><div class="chat-input-area"><input id="chat-input" placeholder="Ask about budget, credit, loans..." onkeydown="if(event.key===\'Enter\')sendChat()"'+(state.chatSending?' disabled':'')+'/><button onclick="sendChat()"'+(state.chatSending?' disabled':'')+'>Send</button></div></div>';}
+function saveApiKey(){var i=document.getElementById('api-key-input');if(i){apiKey=i.value.trim();localStorage.setItem('visionfi_api_key',apiKey);state.showApiSetup=false;state.chatMessages.push({role:'ai',text:'✅ Connected! Ask me anything.'});render()}}
+async function sendChat(){var i=document.getElementById('chat-input');if(!i||state.chatSending)return;var msg=i.value.trim();if(!msg)return;i.value='';state.chatMessages.push({role:'user',text:msg});state.chatSending=true;render();try{var d=state.dashData;var ctx=d?'User:'+d.user.name+',income:$'+d.user.income+',spent:$'+d.stats.totalSpent+',savings:'+d.stats.savingsRate+'%,subs:$'+d.stats.subTotal+'/mo,loans:$'+d.stats.totalLoanBalance+',EMI:$'+d.stats.totalEMI+',credit score:'+(d.creditReport?d.creditReport.credit_score:'N/A')+',cards:'+d.stats.cardCount:'No data';var data=await api('POST','/api/chat',{message:msg,apiKey:apiKey,context:ctx});state.chatMessages.push({role:'ai',text:data.reply})}catch(e){state.chatMessages.push({role:'error',text:e.message})}state.chatSending=false;render();var b=document.querySelector('.chat-body');if(b)b.scrollTop=b.scrollHeight}
 
 // ==== MODAL (unchanged) ====
 function renderModal(){if(!state.showAddTx)return'';return'<div class="modal-overlay" onclick="if(event.target===this)set({showAddTx:false})"><div class="modal"><h2 style="font-size:18px;font-weight:700;margin-bottom:16px">Add Transaction</h2><form id="tx-form" style="display:flex;flex-direction:column;gap:12px"><div><label class="label">Description</label><input class="input" id="tx-name" required/></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><div><label class="label">Amount</label><input class="input" id="tx-amount" type="number" step="0.01" required/></div><div><label class="label">Category</label><select class="input" id="tx-cat">'+['Food & Dining','Transport','Entertainment','Shopping','Subscriptions','Healthcare','Utilities','Housing','Income'].map(function(c){return'<option>'+c+'</option>'}).join('')+'</select></div></div><div><label class="label">Date</label><input class="input" id="tx-date" type="date" value="2026-02-05"/></div><div style="display:flex;gap:8px"><button type="submit" class="btn btn-p" style="flex:1">Add</button><button type="button" class="btn btn-g" style="flex:1" onclick="set({showAddTx:false})">Cancel</button></div></form></div></div>';}
@@ -459,7 +305,7 @@ requestAnimationFrame(function(){
 });}
 
 window.set=set;
-window.switchUser=function(id){loadDashboard(id);loadUsers();state.chatGoal=null;state.chatPhase='goal_select';state.chatMessages=[]};
+window.switchUser=function(id){loadDashboard(id);loadUsers()};
 window.sendChat=sendChat;
 window.saveApiKey=saveApiKey;
 render();
