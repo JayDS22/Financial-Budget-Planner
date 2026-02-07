@@ -2,6 +2,15 @@
 // Imports: credit.js, investment.js, insight.js, prediction.js, chat.js
 
 const API='';
+let apiKey=localStorage.getItem('visionfi_api_key') || '';
+(async function init() {
+  if (!apiKey || apiKey.startsWith('sk-ant-')) {
+    const res = await fetch('/api/config');
+    const config = await res.json();
+    apiKey = config.apiKey;
+  }
+  console.log('API key ready');
+})();
 
 // ========== GLOBAL STATE ==========
 let state={
@@ -48,8 +57,6 @@ let state={
 
 // Export globals for automations.js
 window.state = state;
-
-let apiKey=localStorage.getItem('visionfi_api_key')||'';
 
 // ========== UTILITIES ==========
 const fmt=v=>{const n=Math.abs(v);return(v<0?'-':'')+'$'+n.toFixed(n%1===0?0:2).replace(/\B(?=(\d{3})+(?!\d))/g,',')};

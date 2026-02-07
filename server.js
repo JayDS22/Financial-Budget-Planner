@@ -2062,6 +2062,11 @@ app.get('/api/automations/vault/:userId', (req, res) => {
   res.json({ balance: vault[0]?.balance || 0, lastUpdated: vault[0]?.last_updated || null });
 });
 
+// Export API key for app.js
+app.get('/api/config', (req, res) => {
+  res.json({ apiKey: process.env.ANTHROPIC_API_KEY });
+});
+
 // ============================================================================
 // END OF AUTOMATIONS ADDITIONS
 // ============================================================================
