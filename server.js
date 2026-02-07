@@ -768,7 +768,7 @@ app.post('/api/orchestrator/analyze', async (req, res) => {
   };
   
   // Get API key
-  const apiKey = req.headers['x-api-key'] || process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY || req.headers['x-api-key'];
   if (!apiKey) {
     return res.status(400).json({ error: 'API key required' });
   }
