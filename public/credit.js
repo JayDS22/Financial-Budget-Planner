@@ -1,0 +1,57 @@
+// VisionFi — credit.js
+// Credit & Loans module
+
+function scoreColor(s){return s>=750?'var(--green)':s>=700?'var(--blue)':s>=650?'var(--amber)':'var(--red)'}
+
+function scoreSVG(score){
+  var pct=Math.min((score-300)/550,1),ang=pct*240-120,r=54;
+  var sx=65+r*Math.cos(-120*Math.PI/180),sy=70+r*Math.sin(-120*Math.PI/180);
+  var ex=65+r*Math.cos(ang*Math.PI/180),ey=70+r*Math.sin(ang*Math.PI/180);
+  var large=pct>.5?1:0;
+  var col=scoreColor(score);
+  return'<svg class="score-ring" width="130" height="110" viewBox="0 0 130 110"><path d="M'+sx+' '+sy+' A'+r+' '+r+' 0 1 1 '+(65+r*Math.cos(120*Math.PI/180))+' '+(70+r*Math.sin(120*Math.PI/180))+'" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="10" stroke-linecap="round"/><path d="M'+sx+' '+sy+' A'+r+' '+r+' 0 '+large+' 1 '+ex.toFixed(1)+' '+ey.toFixed(1)+'" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round"/><text x="65" y="68" text-anchor="middle" fill="'+col+'" font-size="28" font-weight="700" font-family="IBM Plex Mono,monospace">'+score+'</text><text x="65" y="86" text-anchor="middle" fill="#5a5a7a" font-size="10">CREDIT SCORE</text></svg>';
+}
+
+function renderCredit(){
+  var d=state.dashData;if(!d)return'';
+  var cr=d.creditReport,cards=d.creditCards,loans=d.loans,ccSpend=d.creditSpending,s=d.stats,sub=state.creditSub;
+  var tabs=[{id:'overview',l:'Overview'},{id:'cards',l:'Credit Cards'},{id:'loans',l:'Loans & EMIs'},{id:'spending',l:'Card Spending'},{id:'history',l:'History'}];
+  var html='<div style="animation:fadeIn .35s"><h1 style="font-size:24px;font-weight:700;margin-bottom:18px">Credit & Loans</h1><div style="display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--bg1);margin-bottom:18px;border:1px solid var(--bd)">'+tabs.map(function(t){return'<button onclick="set({creditSub:\''+t.id+'\'})" style="padding:8px 14px;border-radius:7px;border:none;cursor:pointer;background:'+(sub===t.id?'var(--bg2)':'transparent')+';color:'+(sub===t.id?'var(--t1)':'var(--t3)')+';font-size:11px;font-weight:'+(sub===t.id?600:400)+';font-family:inherit">'+t.l+'</button>'}).join('')+'</div>';
+
+  if(sub==='overview'&&cr){
+    html+='<div class="grid g2" style="margin-bottom:16px"><div class="card" style="display:flex;align-items:center;gap:24px">'+scoreSVG(cr.credit_score)+'<div><div style="font-size:20px;font-weight:700;color:'+scoreColor(cr.credit_score)+'">'+cr.score_rating+'</div><div style="font-size:11px;color:var(--t3)">Updated '+cr.last_updated+'</div><div style="display:flex;gap:12px;margin-top:10px">'+[{l:'On-Time',v:cr.on_time_pct+'%',c:'var(--green)'},{l:'Util.',v:cr.credit_utilization+'%',c:cr.credit_utilization>30?'var(--amber)':'var(--green)'},{l:'Inquiries',v:cr.hard_inquiries,c:'var(--t1)'}].map(function(x){return'<div style="text-align:center"><div class="mono" style="font-size:14px;font-weight:600;color:'+x.c+'">'+x.v+'</div><div style="font-size:9px;color:var(--t3)">'+x.l+'</div></div>'}).join('')+'</div></div></div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Account Summary</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+[{l:'Total Accounts',v:cr.total_accounts},{l:'Open',v:cr.open_accounts},{l:'Closed',v:cr.closed_accounts},{l:'Credit Age',v:cr.credit_age_years+'y'},{l:'Total Limit',v:fmt(cr.total_credit_limit)},{l:'Total Balance',v:fmt(cr.total_balance)},{l:'Derogatory',v:cr.derogatory_marks},{l:'Oldest',v:cr.oldest_account}].map(function(x){return'<div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:2px">'+x.l+'</div><div class="mono" style="font-size:14px;font-weight:600">'+x.v+'</div></div>'}).join('')+'</div></div></div>';
+    html+='<div class="grid g4">'+[{l:'Cards',v:s.cardCount,i:'💳',c:'var(--blue)'},{l:'Card Balance',v:fmt(s.totalCreditBalance),i:'💰',c:'var(--amber)'},{l:'Loans',v:s.loanCount,i:'📋',c:'var(--purple)'},{l:'Monthly EMI',v:fmt(s.totalEMI),i:'📅',c:'var(--red)'}].map(function(x){return'<div class="card" style="text-align:center"><div style="font-size:22px;margin-bottom:6px">'+x.i+'</div><div class="mono" style="font-size:20px;font-weight:700;color:'+x.c+'">'+x.v+'</div><div style="font-size:10px;color:var(--t3);margin-top:2px">'+x.l+'</div></div>'}).join('')+'</div>';
+  }
+
+  if(sub==='cards'){
+    html+='<div class="grid gf">'+cards.map(function(c){
+      var util=Math.round(c.current_balance/c.credit_limit*100);
+      var uc=util>50?'var(--red)':util>30?'var(--amber)':'var(--green)';
+      return'<div class="credit-card-visual"><div style="display:flex;justify-content:space-between;margin-bottom:18px"><div><div style="font-size:14px;font-weight:600">'+c.card_name+'</div><div style="font-size:10px;color:var(--t3)">'+c.issuer+' · '+c.card_type+'</div></div><span class="badge" style="background:var(--blue-g);color:var(--blue)">'+c.rewards_rate+'% '+c.rewards_type+'</span></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="cc-chip"></div><div class="mono" style="font-size:15px;letter-spacing:3px;color:var(--t2)">•••• '+c.last_four+'</div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"><div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:2px">Balance</div><div class="mono" style="font-size:15px;font-weight:700">'+fmt(c.current_balance)+'</div></div><div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:2px">Limit</div><div class="mono" style="font-size:15px;font-weight:600">'+fmt(c.credit_limit)+'</div></div><div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:2px">Util.</div><div class="mono" style="font-size:15px;font-weight:600;color:'+uc+'">'+util+'%</div></div></div><div style="height:4px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:12px"><div style="height:100%;width:'+util+'%;background:'+uc+';border-radius:2px"></div></div><div style="display:flex;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--t3)"><span>Min: '+fmt(c.min_payment)+'</span><span>APR: '+c.apr+'%</span><span>Due: '+c.due_date+'</span></div></div>';
+    }).join('')+'</div>';
+  }
+
+  if(sub==='loans'){
+    html+='<div style="margin-bottom:16px;padding:16px;background:var(--bg2);border:1px solid var(--bd);border-radius:12px;display:flex;justify-content:space-around;text-align:center">'+[{l:'Total Debt',v:fmt(s.totalLoanBalance),c:'var(--red)'},{l:'Monthly EMI',v:fmt(s.totalEMI),c:'var(--amber)'},{l:'Active Loans',v:s.loanCount,c:'var(--blue)'}].map(function(x){return'<div><div style="font-size:10px;color:var(--t3);text-transform:uppercase;margin-bottom:4px">'+x.l+'</div><div class="mono" style="font-size:22px;font-weight:700;color:'+x.c+'">'+x.v+'</div></div>'}).join('')+'</div>';
+    html+='<div style="display:flex;flex-direction:column;gap:12px">'+loans.map(function(l){
+      var pct=Math.round(l.months_paid/l.tenure_months*100);
+      var ti={'Student':'🎓','Auto':'🚗','Personal':'💰','Mortgage':'🏠'}[l.loan_type]||'📋';
+      var tc={'Student':'var(--blue)','Auto':'var(--amber)','Personal':'var(--green)','Mortgage':'var(--purple)'}[l.loan_type]||'var(--t1)';
+      return'<div class="card loan-card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--bg1);font-size:18px;border:1px solid var(--bd)">'+ti+'</div><div><div style="font-size:15px;font-weight:600">'+l.loan_name+'</div><div style="font-size:10px;color:var(--t3)">'+l.lender+' · '+l.loan_type+'</div></div></div><span class="badge" style="background:var(--green-g);color:var(--green)">Active</span></div><div class="grid g4" style="gap:10px;margin-bottom:12px">'+[{l:'Original',v:fmt(l.original_amount)},{l:'Remaining',v:fmt(l.remaining_balance)},{l:'Rate',v:l.interest_rate+'%'},{l:'EMI',v:fmt(l.emi_amount)}].map(function(x){return'<div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:2px">'+x.l+'</div><div class="mono" style="font-size:13px;font-weight:600">'+x.v+'</div></div>'}).join('')+'</div><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:10px;color:var(--t2)"><span>'+l.months_paid+'/'+l.tenure_months+' months ('+pct+'%)</span><span>Next EMI: '+l.next_emi_date+'</span></div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,.04)"><div style="height:100%;width:'+pct+'%;background:'+tc+';border-radius:3px"></div></div></div>';
+    }).join('')+'</div>';
+  }
+
+  if(sub==='spending'){
+    html+='<div style="border-radius:13px;background:var(--bg2);border:1px solid var(--bd);overflow:hidden"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--bd)">'+['','Merchant','Card','Amount','Date','Category'].map(function(h){return'<th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--t3);text-transform:uppercase">'+h+'</th>'}).join('')+'</tr></thead><tbody>'+ccSpend.map(function(sp){
+      var card=cards.find(function(c){return c.id===sp.card_id});
+      return'<tr style="border-bottom:1px solid rgba(255,255,255,.03)"><td style="padding:10px 14px">'+sp.icon+'</td><td style="padding:10px 14px;font-size:12px;font-weight:500">'+sp.merchant+'</td><td style="padding:10px 14px;font-size:11px;color:var(--t3)">'+(card?'••'+card.last_four:'')+'</td><td class="mono" style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--red)">'+fmt(Math.abs(sp.amount))+'</td><td style="padding:10px 14px;font-size:11px;color:var(--t3)">'+sp.date+'</td><td style="padding:10px 14px"><span class="badge" style="background:var(--bg4);color:var(--t2)">'+sp.category+'</span></td></tr>';
+    }).join('')+'</tbody></table></div>';
+  }
+
+  if(sub==='history'&&cr){
+    html+='<div class="card" style="margin-bottom:16px"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Score Trend (7 months)</h3><canvas id="chart-credit" style="width:100%;height:240px"></canvas></div>';
+    html+='<div class="grid g2"><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:12px">Factors Helping ✅</h3>'+[{f:'On-time payments',v:cr.on_time_pct+'%'},{f:'Credit age',v:cr.credit_age_years+' years'},{f:'Account mix',v:cr.total_accounts+' accounts'}].map(function(x){return'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:12px">'+x.f+'</span><span class="mono" style="font-size:12px;color:var(--green)">'+x.v+'</span></div>'}).join('')+'</div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:12px">Needs Work ⚠️</h3>'+[{f:'Utilization',v:cr.credit_utilization+'%',c:cr.credit_utilization>30?'var(--amber)':'var(--green)'},{f:'Hard inquiries',v:cr.hard_inquiries,c:cr.hard_inquiries>2?'var(--amber)':'var(--green)'},{f:'Derogatory marks',v:cr.derogatory_marks,c:cr.derogatory_marks>0?'var(--red)':'var(--green)'}].map(function(x){return'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:12px">'+x.f+'</span><span class="mono" style="font-size:12px;color:'+x.c+'">'+x.v+'</span></div>'}).join('')+'</div></div>';
+  }
+
+  return html+'</div>';
+}

@@ -43,14 +43,14 @@ async function initDB() {
 
   // 3 Users
   const users = [
-    ['u1','Alex Chen','alex@cmu.edu','demo123','ðŸ‘¨â€ðŸ’»',7500,'USD','premium','Financial Independence'],
-    ['u2','Sarah Kim','sarah@gmail.com','demo123','ðŸ‘©â€ðŸ”¬',6200,'USD','free','Save for House'],
-    ['u3','Jay Gupta','jay@cmu.edu','demo123','ðŸ‘¨â€ðŸŽ“',8500,'USD','premium','Debt Freedom']
+    ['u1','Alex Chen','alex@cmu.edu','demo123','👨‍💻',7500,'USD','premium','Financial Independence'],
+    ['u2','Sarah Kim','sarah@gmail.com','demo123','👩‍🔬',6200,'USD','free','Save for House'],
+    ['u3','Jay Gupta','jay@cmu.edu','demo123','👨‍🎓',8500,'USD','premium','Debt Freedom']
   ];
   for (const u of users) db.run(`INSERT INTO users VALUES (?,?,?,?,?,?,?,?,?)`, u);
 
   // Transactions
-  const txs = [['Whole Foods',-82.45,'Food & Dining','ðŸ›’','2026-02-05','expense'],['Uber Ride',-24.50,'Transport','ðŸš—','2026-02-04','expense'],['Netflix',-15.99,'Subscriptions','ðŸŽ¬','2026-02-04','expense'],['Payroll Deposit',3750.00,'Income','ðŸ’°','2026-02-03','income'],['Amazon',-67.89,'Shopping','ðŸ“¦','2026-02-03','expense'],['Starbucks',-6.75,'Food & Dining','â˜•','2026-02-02','expense'],['Electric Bill',-145.00,'Utilities','ðŸ’¡','2026-02-01','expense'],['CVS Pharmacy',-32.10,'Healthcare','ðŸ’Š','2026-02-01','expense'],['Movie Tickets',-28.00,'Entertainment','ðŸŽŸï¸','2026-01-31','expense'],['Freelance Pay',1200.00,'Income','ðŸ’µ','2026-01-30','income'],['Gas Station',-52.30,'Transport','â›½','2026-01-30','expense'],['Target',-94.20,'Shopping','ðŸŽ¯','2026-01-29','expense'],['Rent Payment',-2200.00,'Housing','ðŸ ','2026-02-01','expense'],['Spotify',-10.99,'Subscriptions','ðŸŽµ','2026-02-01','expense'],['Gym',-49.99,'Healthcare','ðŸ’ª','2026-02-01','expense']];
+  const txs = [['Whole Foods',-82.45,'Food & Dining','🛒','2026-02-05','expense'],['Uber Ride',-24.50,'Transport','🚗','2026-02-04','expense'],['Netflix',-15.99,'Subscriptions','🎬','2026-02-04','expense'],['Payroll Deposit',3750.00,'Income','💰','2026-02-03','income'],['Amazon',-67.89,'Shopping','📦','2026-02-03','expense'],['Starbucks',-6.75,'Food & Dining','☕','2026-02-02','expense'],['Electric Bill',-145.00,'Utilities','💡','2026-02-01','expense'],['CVS Pharmacy',-32.10,'Healthcare','💊','2026-02-01','expense'],['Movie Tickets',-28.00,'Entertainment','🎟️','2026-01-31','expense'],['Freelance Pay',1200.00,'Income','💵','2026-01-30','income'],['Gas Station',-52.30,'Transport','⛽','2026-01-30','expense'],['Target',-94.20,'Shopping','🎯','2026-01-29','expense'],['Rent Payment',-2200.00,'Housing','🏠','2026-02-01','expense'],['Spotify',-10.99,'Subscriptions','🎵','2026-02-01','expense'],['Gym',-49.99,'Healthcare','💪','2026-02-01','expense']];
   for (const uid of ['u1','u2','u3']) for (const t of txs) db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [uuidv4(),uid,...t]);
 
   // Budgets
@@ -58,7 +58,7 @@ async function initDB() {
   for (const uid of ['u1','u2','u3']) for (const c of cats) db.run(`INSERT INTO budgets VALUES(?,?,?,?)`, [uuidv4(),uid,...c]);
 
   // Subscriptions
-  const subs = [['Netflix',15.99,'ðŸŽ¬','2026-02-15'],['Spotify',10.99,'ðŸŽµ','2026-02-12'],['iCloud+',2.99,'â˜ï¸','2026-02-20'],['Gym',49.99,'ðŸ’ª','2026-03-01'],['Adobe CC',54.99,'ðŸŽ¨','2026-02-18'],['ChatGPT Plus',20.00,'ðŸ¤–','2026-02-22'],['AWS',32.50,'ðŸ–¥ï¸','2026-02-28'],['NYT',4.25,'ðŸ“°','2026-02-10']];
+  const subs = [['Netflix',15.99,'🎬','2026-02-15'],['Spotify',10.99,'🎵','2026-02-12'],['iCloud+',2.99,'☁️','2026-02-20'],['Gym',49.99,'💪','2026-03-01'],['Adobe CC',54.99,'🎨','2026-02-18'],['ChatGPT Plus',20.00,'🤖','2026-02-22'],['AWS',32.50,'🖥️','2026-02-28'],['NYT',4.25,'📰','2026-02-10']];
   for (const uid of ['u1','u2','u3']) for (const s of subs) db.run(`INSERT INTO subscriptions VALUES(?,?,?,?,?,?,?)`, [uuidv4(),uid,s[0],s[1],s[2],s[3],'active']);
 
   // Credit Reports
@@ -94,19 +94,19 @@ async function initDB() {
 
   // Credit spending
   const ccs = [
-    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','âœˆï¸'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','ðŸ¨'],
-    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','ðŸ›’'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','ðŸª'],
-    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','â›½'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','ðŸŽ'],
-    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','ðŸŽ¯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','ðŸ”'],
-    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','ðŸ“¦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','ðŸ’„'],
-    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','ðŸ›’'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','ðŸ‘—'],
-    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','ðŸ¨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','ðŸ·'],
-    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','ðŸ‘œ'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','ðŸ’»'],
-    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','ðŸ›’'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','ðŸ”¨'],
+    ['u1','cc1','Delta Airlines',-420.00,'2026-02-04','Travel','✈️'],['u1','cc1','Marriott',-289.00,'2026-02-03','Travel','🏨'],
+    ['u1','cc2','Whole Foods',-156.30,'2026-02-05','Groceries','🛒'],['u1','cc2','Costco',-234.80,'2026-02-02','Groceries','🏪'],
+    ['u1','cc3','Shell Gas',-62.40,'2026-02-04','Gas','⛽'],['u1','cc3','Apple Store',-199.00,'2026-02-01','Electronics','🍎'],
+    ['u2','cc4','Target',-145.60,'2026-02-05','Shopping','🎯'],['u2','cc4','Uber Eats',-38.90,'2026-02-03','Food','🍔'],
+    ['u2','cc5','Amazon',-89.99,'2026-02-04','Shopping','📦'],['u2','cc5','Sephora',-67.50,'2026-02-02','Beauty','💄'],
+    ['u2','cc6','Trader Joes',-78.20,'2026-02-05','Groceries','🛒'],['u2','cc6','Zara',-124.00,'2026-02-01','Clothing','👗'],
+    ['u3','cc7','Four Seasons',-580.00,'2026-02-04','Travel','🏨'],['u3','cc7','Nobu',-320.00,'2026-02-03','Dining','🍷'],
+    ['u3','cc8','Louis Vuitton',-890.00,'2026-02-02','Luxury','👜'],['u3','cc8','Best Buy',-1200.00,'2026-02-01','Electronics','💻'],
+    ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','🛒'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','🔨'],
   ];
   for (const s of ccs) db.run(`INSERT INTO credit_spending VALUES(?,?,?,?,?,?,?,?)`, [uuidv4(),...s]);
 
-  console.log('âœ… Database ready: 3 users, credit reports, cards, loans, EMIs, agent memory');
+  console.log('✅ Database ready: 3 users, credit reports, cards, loans, EMIs, agent memory');
 }
 
 // Auth
@@ -114,7 +114,7 @@ app.post('/api/register', (req, res) => {
   const {name,email,password,income,currency,goal} = req.body;
   if (!name||!email||!password) return res.status(400).json({error:'All fields required'});
   if (query(`SELECT id FROM users WHERE email=?`,[email]).length) return res.status(409).json({error:'Email exists'});
-  const id=uuidv4(), av=['ðŸ‘¤','ðŸ‘©â€ðŸ’¼','ðŸ‘¨â€ðŸŽ“','ðŸ‘©â€ðŸŽ¨','ðŸ§‘â€ðŸ’»'][Math.floor(Math.random()*5)];
+  const id=uuidv4(), av=['👤','👩‍💼','👨‍🎓','👩‍🎨','🧑‍💻'][Math.floor(Math.random()*5)];
   db.run(`INSERT INTO users VALUES(?,?,?,?,?,?,?,?,?)`, [id,name,email,password,av,income||5000,currency||'USD','free',goal||'General']);
   const cats=[['Housing',2200],['Food & Dining',800],['Transport',450],['Entertainment',300],['Shopping',500],['Subscriptions',120],['Healthcare',200],['Utilities',280]];
   for(const c of cats) db.run(`INSERT INTO budgets VALUES(?,?,?,?)`,[uuidv4(),id,...c]);
@@ -173,7 +173,7 @@ app.get('/api/dashboard/:userId', (req, res) => {
 app.post('/api/transactions', (req,res) => {
   const {user_id,name,amount,category,icon,date,type}=req.body;
   const id=uuidv4();
-  db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [id,user_id,name,amount,category,icon||'ðŸ’³',date,type||'expense']);
+  db.run(`INSERT INTO transactions VALUES(?,?,?,?,?,?,?,?)`, [id,user_id,name,amount,category,icon||'💳',date,type||'expense']);
   res.json({success:true,id});
 });
 
@@ -748,5 +748,5 @@ ${FORMATTING_RULES}`;
 app.get('/{*splat}', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 initDB().then(() => {
-  app.listen(process.env.PORT || 3000, () => console.log(`\nðŸš€ VisionFi â†’ http://localhost:${process.env.PORT || 3000}\n   Users: alex@cmu.edu | sarah@gmail.com | jay@cmu.edu (pw: demo123)\n`));
+  app.listen(process.env.PORT || 3000, () => console.log(`\n🚀 VisionFi → http://localhost:${process.env.PORT || 3000}\n   Users: alex@cmu.edu | sarah@gmail.com | jay@cmu.edu (pw: demo123)\n`));
 });
