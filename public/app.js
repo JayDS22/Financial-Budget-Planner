@@ -183,7 +183,6 @@ function renderSidebar(){
   var u=state.currentUser;if(!u)return'';
   var tabs=[
     {id:'dashboard',l:'Dashboard',i:'📊'},
-    {id:'automations',l:'Automations',i:'⚡'},
     {id:'subscriptions',l:'Subscriptions',i:'📱'},
     {id:'credit',l:'Credit & Loans',i:'💳'},
     {id:'investments',l:'Investments',i:'📈'},
@@ -191,12 +190,9 @@ function renderSidebar(){
     {id:'predictions',l:'Predictions',i:'🔮'}
   ];
   
-  var activeCount = 0;
-  var totalSaved = 0;
-  if(window.automationState && window.automationState.rules){
-    activeCount = window.automationState.rules.filter(function(r){return r.status === 'active'}).length;
-    totalSaved = window.automationState.totalSaved || 0;
-  }
+  var stats = (typeof getSmartFeatureStats === 'function') ? getSmartFeatureStats() : {activeCount: 0, totalSaved: 0};
+  var activeCount = stats.activeCount;
+  var totalSaved = stats.totalSaved;
   
   return '<div class="sidebar" style="width:260px;min-height:100vh;background:linear-gradient(180deg,#0a0a18 0%,#080814 100%);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:50">' +
     '<div style="padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.04)">' +
@@ -226,13 +222,28 @@ function renderSidebar(){
           '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(61,219,160,0.2),rgba(91,140,255,0.2));display:flex;align-items:center;justify-content:center;font-size:18px">⚙️</div>' +
           '<div style="flex:1;text-align:left">' +
             '<div style="font-size:13px;font-weight:600">Smart Features</div>' +
-            '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">' +
+            '<div data-smart-stats style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">' +
               '<span style="color:var(--green)">' + activeCount + ' active</span>' +
               '<span style="margin:0 6px">•</span>' +
               '<span style="color:var(--green);font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
             '</div>' +
           '</div>' +
           '<span style="color:rgba(255,255,255,0.4);font-size:16px">›</span>' +
+                  '</button>' +
+                '</div>' +
+                
+                // Daily Briefing Button (only show if dismissed)
+                (!state.showBriefing && state.briefingData ? 
+                  '<div style="padding:0 12px 8px">' +
+                    '<button onclick="set({showBriefing:true})" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--t2);font-family:inherit;transition:all 0.2s">' +
+                      '<span style="font-size:16px">📊</span>' +
+                      '<span style="font-size:12px">Show Daily Briefing</span>' +
+                    '</button>' +
+                  '</div>'
+                  : ''
+                ) +
+                
+                // Profile Section
         '</button>' +
       '</div>' +
       '<div style="padding:8px 12px 16px;position:relative">' +
@@ -308,16 +319,14 @@ function renderBriefing(){
   
   // If dismissed, show a small "Show Briefing" button
   if(!state.showBriefing){
-    return'<button onclick="set({showBriefing:true})" style="position:fixed;top:20px;right:280px;z-index:200;padding:10px 16px;border-radius:12px;border:1px solid var(--bd);background:var(--bg2);color:var(--t2);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all 0.2s" onmouseover="this.style.background=\'var(--bg3)\';this.style.color=\'var(--t1)\'" onmouseout="this.style.background=\'var(--bg2)\';this.style.color=\'var(--t2)\'">'+
-      '<span>📊</span> Show Daily Briefing'+
-    '</button>';
-  }
+      return'';  // Don't show floating button - it's now in sidebar
+    }
   
   var b=state.briefingData;
   var y=b.yesterday;
   var g=b.goalProgress;
   
-  return'<div class="briefing-overlay" style="position:fixed;top:0;left:240px;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:150;display:flex;align-items:flex-start;justify-content:center;padding-top:40px;animation:fadeIn 0.3s" onclick="if(event.target===this)dismissBriefing()">'+
+  return'<div class="briefing-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding-top:40px;animation:fadeIn 0.3s" onclick="if(event.target===this)dismissBriefing()">'+
     '<div class="briefing-card" style="width:90%;max-width:700px;padding:24px;border-radius:20px;background:var(--bg2);border:1px solid var(--bd);box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:slideDown 0.4s ease-out" onclick="event.stopPropagation()">'+
       
       // Header with dismiss
@@ -935,12 +944,32 @@ window.switchUser=function(id){
 
 
 // ========== SMART FEATURES PANEL ==========
+
+// Smart Features State (separate from automation state for UI)
+if(!window.smartFeaturesState) {
+  window.smartFeaturesState = {
+    round_up: { enabled: true, saved: 151.51, preset: 0 },
+    under_budget: { enabled: true, saved: 486.75, preset: 0 },
+    bill_reminder: { enabled: false },
+    subscription_guard: { enabled: false },
+    spending_limit: { enabled: true },
+    savings_goal: { enabled: false }
+  };
+}
+
+function getSmartFeatureStats() {
+  var sf = window.smartFeaturesState;
+  var activeCount = Object.values(sf).filter(function(f) { return f.enabled; }).length;
+  var totalSaved = (sf.round_up.enabled ? sf.round_up.saved : 0) + (sf.under_budget.enabled ? sf.under_budget.saved : 0);
+  return { activeCount: activeCount, totalSaved: totalSaved };
+}
+window.getSmartFeatureStats = getSmartFeatureStats;
+
 function renderSmartFeaturesPanel(){
   if(!state.showSmartFeaturesPanel) return '';
   
-  var rules = (window.automationState && window.automationState.rules) || [];
-  var totalSaved = (window.automationState && window.automationState.totalSaved) || 0;
-  var activeCount = rules.filter(function(r){return r.status === 'active'}).length;
+  var sf = window.smartFeaturesState;
+  var stats = getSmartFeatureStats();
   
   var features = [
     {id:'round_up',icon:'🪙',name:'Round-Up Savings',desc:'Round up purchases and save the difference',presets:['Nearest $1','Nearest $5','Nearest $10'],hasSaved:true},
@@ -951,14 +980,8 @@ function renderSmartFeaturesPanel(){
     {id:'savings_goal',icon:'🎯',name:'Auto Daily Savings',desc:'Automatically save a fixed amount daily',presets:null}
   ];
   
-  features.forEach(function(f){
-    var rule = rules.find(function(r){return r.type === f.id});
-    f.enabled = rule ? rule.status === 'active' : false;
-    f.savedAmount = rule && rule.totalSaved ? rule.totalSaved : (f.id==='round_up'?151.51:f.id==='under_budget'?486.75:0);
-  });
-  
-  return '<div onclick="if(event.target===this)closeSmartFeaturesPanel()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;animation:fadeIn 0.2s">' +
-    '<div style="position:fixed;top:0;right:0;bottom:0;width:400px;background:linear-gradient(180deg,#0e0e1a 0%,#0a0a14 100%);border-left:1px solid rgba(255,255,255,0.08);z-index:201;display:flex;flex-direction:column;animation:slideInRight 0.3s ease">' +
+  return '<div onclick="if(event.target===this)closeSmartFeaturesPanel()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200">' +
+    '<div data-smart-panel style="position:fixed;top:0;right:0;bottom:0;width:400px;background:linear-gradient(180deg,#0e0e1a 0%,#0a0a14 100%);border-left:1px solid rgba(255,255,255,0.08);z-index:201;display:flex;flex-direction:column">'+
       '<div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:flex-start">' +
         '<div>' +
           '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
@@ -966,38 +989,56 @@ function renderSmartFeaturesPanel(){
             '<h2 style="font-size:20px;font-weight:700;margin:0">Smart Features</h2>' +
           '</div>' +
           '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.5)">' +
-            '<span style="color:var(--green)">' + activeCount + ' active</span>' +
+            '<span style="color:var(--green)">' + stats.activeCount + ' active</span>' +
             '<span>•</span>' +
-            '<span style="color:var(--green);font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
+            '<span style="color:var(--green);font-weight:600">$' + stats.totalSaved.toFixed(2) + ' saved</span>' +
           '</div>' +
         '</div>' +
         '<button onclick="closeSmartFeaturesPanel()" style="width:32px;height:32px;border-radius:8px;border:none;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>' +
       '</div>' +
       '<div style="flex:1;overflow-y:auto;padding:16px 20px">' +
-        features.map(function(f,idx){
+        features.map(function(f, idx){
           var isMain = idx < 2;
-          var bg = f.enabled ? (isMain ? 'linear-gradient(135deg,rgba(61,219,160,0.08),rgba(91,140,255,0.05))' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.02)';
-          var border = f.enabled ? (isMain ? 'rgba(61,219,160,0.2)' : 'rgba(255,255,255,0.08)') : 'rgba(255,255,255,0.06)';
-          return '<div style="padding:'+(isMain?'18px':'16px')+';background:'+bg+';border:1px solid '+border+';border-radius:'+(isMain?'14px':'12px')+';margin-bottom:'+(isMain?'12px':'10px')+';display:flex;'+(isMain?'flex-direction:column':'justify-content:space-between;align-items:center')+'">' +
-            '<div style="display:flex;'+(isMain?'justify-content:space-between;align-items:flex-start;margin-bottom:12px':'gap:12px;align-items:center')+'">' +
-              '<div style="display:flex;gap:12px;'+(isMain?'':'align-items:center')+'">' +
-                '<span style="font-size:'+(isMain?'28px':'22px')+'">'+f.icon+'</span>' +
-                '<div>' +
-                  '<div style="font-size:'+(isMain?'15px':'14px')+';font-weight:'+(isMain?'600':'500')+'">'+f.name+'</div>' +
-                  '<div style="font-size:'+(isMain?'12px':'11px')+';color:rgba(255,255,255,'+(isMain?'0.5':'0.4')+');margin-top:'+(isMain?'4px':'2px')+'">'+f.desc+'</div>' +
-                '</div>' +
-              '</div>' +
-              (isMain ? renderToggle(f.id, f.enabled) : '') +
-            '</div>' +
-            (isMain && f.enabled ? 
-              '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(61,219,160,0.15);border-radius:8px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px">Saved: $'+f.savedAmount.toFixed(2)+'</div>' +
-              (f.presets ? '<div style="display:flex;gap:8px">'+f.presets.map(function(p,i){
-                return '<button onclick="event.stopPropagation()" style="flex:1;padding:10px;border-radius:8px;border:none;background:'+(i===0?'linear-gradient(135deg,#5b8cff,#b07cff)':'rgba(255,255,255,0.06)')+';color:'+(i===0?'white':'rgba(255,255,255,0.6)')+';font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">'+p+'</button>';
-              }).join('')+'</div>' : '')
-              : ''
-            ) +
-            (!isMain ? renderToggle(f.id, f.enabled) : '') +
-          '</div>';
+          var featureState = sf[f.id] || { enabled: false };
+          var isEnabled = featureState.enabled;
+          var savedAmount = featureState.saved || 0;
+          var currentPreset = featureState.preset || 0;
+          
+          var bg = isEnabled ? (isMain ? 'linear-gradient(135deg,rgba(61,219,160,0.08),rgba(91,140,255,0.05))' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.02)';
+          var border = isEnabled ? (isMain ? 'rgba(61,219,160,0.2)' : 'rgba(255,255,255,0.08)') : 'rgba(255,255,255,0.06)';
+          
+          var html = '<div style="padding:'+(isMain?'18px':'16px')+';background:'+bg+';border:1px solid '+border+';border-radius:'+(isMain?'14px':'12px')+';margin-bottom:'+(isMain?'12px':'10px')+'">';
+          
+          html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;'+(isMain?'margin-bottom:12px':'')+'">';
+          html += '<div style="display:flex;gap:12px;align-items:center">';
+          html += '<span style="font-size:'+(isMain?'28px':'22px')+'">'+f.icon+'</span>';
+          html += '<div>';
+          html += '<div style="font-size:'+(isMain?'15px':'14px')+';font-weight:'+(isMain?'600':'500')+'">'+f.name+'</div>';
+          html += '<div style="font-size:'+(isMain?'12px':'11px')+';color:rgba(255,255,255,'+(isMain?'0.5':'0.4')+');margin-top:'+(isMain?'4px':'2px')+'">'+f.desc+'</div>';
+          html += '</div></div>';
+          
+          // Toggle button
+          html += '<button onclick="toggleSmartFeature(\''+f.id+'\')" style="width:44px;height:24px;border-radius:12px;border:none;background:'+(isEnabled?'linear-gradient(135deg,#3ddba0,#2bb88a)':'rgba(255,255,255,0.1)')+';cursor:pointer;position:relative;transition:all 0.2s ease;flex-shrink:0">';
+          html += '<div style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:3px;left:'+(isEnabled?'23px':'3px')+';transition:left 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.2)"></div>';
+          html += '</button>';
+          html += '</div>';
+          
+          // Saved amount and presets for main features
+          if(isMain && isEnabled) {
+            html += '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(61,219,160,0.15);border-radius:8px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px">Saved: $'+savedAmount.toFixed(2)+'</div>';
+            
+            if(f.presets) {
+              html += '<div style="display:flex;gap:8px">';
+              f.presets.forEach(function(p, i) {
+                var isActive = currentPreset === i;
+                html += '<button onclick="setSmartFeaturePreset(\''+f.id+'\','+i+')" style="flex:1;padding:10px;border-radius:8px;border:none;background:'+(isActive?'linear-gradient(135deg,#5b8cff,#b07cff)':'rgba(255,255,255,0.06)')+';color:'+(isActive?'white':'rgba(255,255,255,0.6)')+';font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">'+p+'</button>';
+              });
+              html += '</div>';
+            }
+          }
+          
+          html += '</div>';
+          return html;
         }).join('') +
       '</div>' +
       '<div style="padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2)">' +
@@ -1012,26 +1053,108 @@ function renderSmartFeaturesPanel(){
   '<style>@keyframes slideInRight{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}</style>';
 }
 
-function renderToggle(id, enabled){
-  return '<button onclick="toggleSmartFeature(\''+id+'\');event.stopPropagation()" style="width:40px;height:22px;border-radius:11px;border:none;background:'+(enabled?'linear-gradient(135deg,#3ddba0,#2bb88a)':'rgba(255,255,255,0.1)')+';cursor:pointer;position:relative;transition:all 0.2s ease;flex-shrink:0">' +
-    '<div style="width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:3px;left:'+(enabled?'21px':'3px')+';transition:left 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.2)"></div>' +
-  '</button>';
-}
-
 function toggleSmartFeature(featureId){
-  if(window.automationState && window.automationState.rules){
-    var rule = window.automationState.rules.find(function(r){return r.type === featureId});
-    if(rule && typeof toggleAutomation === 'function'){
-      toggleAutomation(rule.id);
-    } else if(typeof createAutomation === 'function'){
-      createAutomation(featureId, { value: 1 });
-    }
-  } else {
-    showToast('Toggled: ' + featureId, 'success');
+  if(!window.smartFeaturesState[featureId]) {
+    window.smartFeaturesState[featureId] = { enabled: false };
   }
-  render();
+  window.smartFeaturesState[featureId].enabled = !window.smartFeaturesState[featureId].enabled;
+  
+  var feature = window.smartFeaturesState[featureId];
+  var action = feature.enabled ? 'enabled' : 'disabled';
+  showToast('Smart Feature ' + action + '!', 'success');
+  
+  // Close and reopen panel to refresh (prevents flicker better than innerHTML update)
+  state.showSmartFeaturesPanel = false;
+  setTimeout(function(){
+    state.showSmartFeaturesPanel = true;
+    render();
+  }, 50);
 }
 window.toggleSmartFeature = toggleSmartFeature;
+
+function setSmartFeaturePreset(featureId, presetIndex){
+  if(window.smartFeaturesState[featureId]) {
+    window.smartFeaturesState[featureId].preset = presetIndex;
+    showToast('Preset updated!', 'success');
+    // Re-render only the smart features panel content
+    updateSmartFeaturesPanelContent();
+  }
+}
+window.setSmartFeaturePreset = setSmartFeaturePreset;
+
+function updateSmartFeaturesPanelContent(){
+  // Find the panel content container and update it without full re-render
+  var panelContent = document.querySelector('[data-smart-panel-content]');
+  if(panelContent) {
+    panelContent.innerHTML = getSmartFeaturesPanelInnerContent();
+  }
+  // Also update the sidebar stats
+  var sidebarStats = document.querySelector('[data-smart-stats]');
+  if(sidebarStats) {
+    var stats = getSmartFeatureStats();
+    sidebarStats.innerHTML = '<span style="color:var(--green)">' + stats.activeCount + ' active</span><span style="margin:0 6px">•</span><span style="color:var(--green);font-weight:600">$' + stats.totalSaved.toFixed(2) + ' saved</span>';
+  }
+}
+window.updateSmartFeaturesPanelContent = updateSmartFeaturesPanelContent;
+
+function getSmartFeaturesPanelInnerContent(){
+  var sf = window.smartFeaturesState;
+  var stats = getSmartFeatureStats();
+  
+  var features = [
+    {id:'round_up',icon:'🪙',name:'Round-Up Savings',desc:'Round up purchases and save the difference',presets:['Nearest $1','Nearest $5','Nearest $10'],hasSaved:true},
+    {id:'under_budget',icon:'💰',name:'Under-Budget Sweep',desc:'Auto-save when daily spending is under budget',presets:['50% of savings','100% of savings'],hasSaved:true},
+    {id:'bill_reminder',icon:'🔔',name:'Bill Reminders',desc:'Get notified before bills are due',presets:null},
+    {id:'subscription_guard',icon:'🛡️',name:'Subscription Guard',desc:'Alert on unused subscriptions',presets:null},
+    {id:'spending_limit',icon:'⚠️',name:'Spending Alerts',desc:'Warn when category budget is nearly spent',presets:null},
+    {id:'savings_goal',icon:'🎯',name:'Auto Daily Savings',desc:'Automatically save a fixed amount daily',presets:null}
+  ];
+  
+  return features.map(function(f, idx){
+    var isMain = idx < 2;
+    var featureState = sf[f.id] || { enabled: false };
+    var isEnabled = featureState.enabled;
+    var savedAmount = featureState.saved || 0;
+    var currentPreset = featureState.preset || 0;
+    
+    var bg = isEnabled ? (isMain ? 'linear-gradient(135deg,rgba(61,219,160,0.08),rgba(91,140,255,0.05))' : 'rgba(255,255,255,0.03)') : 'rgba(255,255,255,0.02)';
+    var border = isEnabled ? (isMain ? 'rgba(61,219,160,0.2)' : 'rgba(255,255,255,0.08)') : 'rgba(255,255,255,0.06)';
+    
+    var html = '<div style="padding:'+(isMain?'18px':'16px')+';background:'+bg+';border:1px solid '+border+';border-radius:'+(isMain?'14px':'12px')+';margin-bottom:'+(isMain?'12px':'10px')+'">';
+    
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;'+(isMain?'margin-bottom:12px':'')+'">';
+    html += '<div style="display:flex;gap:12px;align-items:center">';
+    html += '<span style="font-size:'+(isMain?'28px':'22px')+'">'+f.icon+'</span>';
+    html += '<div>';
+    html += '<div style="font-size:'+(isMain?'15px':'14px')+';font-weight:'+(isMain?'600':'500')+'">'+f.name+'</div>';
+    html += '<div style="font-size:'+(isMain?'12px':'11px')+';color:rgba(255,255,255,'+(isMain?'0.5':'0.4')+');margin-top:'+(isMain?'4px':'2px')+'">'+f.desc+'</div>';
+    html += '</div></div>';
+    
+    // Toggle button
+    html += '<button onclick="toggleSmartFeature(\''+f.id+'\');event.stopPropagation()" style="width:44px;height:24px;border-radius:12px;border:none;background:'+(isEnabled?'linear-gradient(135deg,#3ddba0,#2bb88a)':'rgba(255,255,255,0.1)')+';cursor:pointer;position:relative;transition:all 0.2s ease;flex-shrink:0">';
+    html += '<div style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:3px;left:'+(isEnabled?'23px':'3px')+';transition:left 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.2)"></div>';
+    html += '</button>';
+    html += '</div>';
+    
+    // Saved amount and presets for main features
+    if(isMain && isEnabled) {
+      html += '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(61,219,160,0.15);border-radius:8px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px">Saved: $'+savedAmount.toFixed(2)+'</div>';
+      
+      if(f.presets) {
+        html += '<div style="display:flex;gap:8px">';
+        f.presets.forEach(function(p, i) {
+          var isActive = currentPreset === i;
+          html += '<button onclick="setSmartFeaturePreset(\''+f.id+'\','+i+');event.stopPropagation()" style="flex:1;padding:10px;border-radius:8px;border:none;background:'+(isActive?'linear-gradient(135deg,#5b8cff,#b07cff)':'rgba(255,255,255,0.06)')+';color:'+(isActive?'white':'rgba(255,255,255,0.6)')+';font-size:12px;font-weight:500;cursor:pointer;font-family:inherit">'+p+'</button>';
+        });
+        html += '</div>';
+      }
+    }
+    
+    html += '</div>';
+    return html;
+  }).join('');
+}
+window.getSmartFeaturesPanelInnerContent = getSmartFeaturesPanelInnerContent;
 
 // ========== INIT ==========
 window.render = render;  // ADD THIS LINE

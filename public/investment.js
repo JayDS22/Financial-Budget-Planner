@@ -117,11 +117,32 @@ function sparkSVGForSym(sym,color){
 }
 
 // Toggle functions for expandable cards
-function toggleStock(sym){state.expandedStock=state.expandedStock===sym?null:sym;if(!state.stockPeriod[sym])state.stockPeriod[sym]='1M';render()}
+function toggleStock(sym){
+  if(state.expandedStock===sym) return;
+  state.expandedStock=sym;
+  if(!state.stockPeriod[sym])state.stockPeriod[sym]='1M';
+  render();
+}
+function collapseStock(sym,e){e.stopPropagation();state.expandedStock=null;render()}
+window.collapseStock=collapseStock
 function setStockPeriod(sym,p){state.stockPeriod[sym]=p;render()}
-function toggleFund(tick){state.expandedFund=state.expandedFund===tick?null:tick;if(!state.fundPeriod[tick])state.fundPeriod[tick]='1M';render()}
+function toggleFund(tick){
+  if(state.expandedFund===tick) return;
+  state.expandedFund=tick;
+  if(!state.fundPeriod[tick])state.fundPeriod[tick]='1M';
+  render();
+}
+function collapseFund(tick,e){e.stopPropagation();state.expandedFund=null;render()}
+window.collapseFund=collapseFund
 function setFundPeriod(tick,p){state.fundPeriod[tick]=p;render()}
-function toggleBond(name){state.expandedBond=state.expandedBond===name?null:name;if(!state.bondPeriod[name])state.bondPeriod[name]='1M';render()}
+function toggleBond(name){
+  if(state.expandedBond===name) return;
+  state.expandedBond=name;
+  if(!state.bondPeriod[name])state.bondPeriod[name]='1M';
+  render();
+}
+function collapseBond(name,e){e.stopPropagation();state.expandedBond=null;render()}
+window.collapseBond=collapseBond
 function setBondPeriod(name,p){state.bondPeriod[name]=p;render()}
 
 // Export toggle functions to window
@@ -148,14 +169,18 @@ function renderInvestments(){
       var isExp=state.expandedStock===s.sym;
       var period=state.stockPeriod[s.sym]||'1M';
       var col=s.chg>=0?'#3ddba0':'#ff6b6b';
-      var h='<div class="card invest-card'+(isExp?' expanded':'')+'" onclick="toggleStock(\''+s.sym+'\')" style="padding:16px">';
-      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px"><div><div style="display:flex;align-items:center;gap:8px"><div class="mono" style="font-size:15px;font-weight:700">'+s.sym+'</div><span class="expand-icon" style="font-size:10px;color:var(--t3)">▼</span></div><div style="font-size:10px;color:var(--t3)">'+s.name+'</div></div><div class="mini-spark">'+sparkSVGForSym(s.sym,col)+'</div></div>';
+      var h='<div class="card invest-card'+(isExp?' expanded':'')+'" onclick="toggleStock(\''+s.sym+'\')" style="padding:16px;position:relative">';
+      if(isExp){
+        h+='<button onclick="collapseStock(\''+s.sym+'\',event)" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--t2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:5">✕</button>';
+      }
+      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px"><div><div style="display:flex;align-items:center;gap:8px"><div class="mono" style="font-size:15px;font-weight:700">'+s.sym+'</div><span class="expand-icon" style="font-size:10px;color:var(--t3)">â–¼</span></div><div style="font-size:10px;color:var(--t3)">'+s.name+'</div></div><div class="mini-spark">'+sparkSVGForSym(s.sym,col)+'</div></div>';
       h+='<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px"><span class="mono" style="font-size:19px;font-weight:700">$'+s.price.toFixed(2)+'</span><span class="badge" style="color:'+col+';background:'+(s.chg>=0?'var(--green-g)':'var(--red-g)')+'">'+(s.chg>=0?'+':'')+s.chg.toFixed(2)+' ('+s.pct.toFixed(2)+'%)</span></div>';
       h+='<div style="font-size:10px;color:var(--t3)">'+s.sector+' · P/E '+s.pe+'</div>';
       h+='<div class="card-detail">';
       if(isExp){
         var stats=getStockStats(s.sym,s.price,s.pct);var pS=stats[period];
         h+='<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:10px">';
+        // h+='<button onclick="collapseStock(\''+s.sym+'\',event)" style="position:absolute;top:-8px;right:0;padding:6px 12px;border-radius:6px;border:1px solid var(--bd);background:var(--bg3);color:var(--t2);cursor:pointer;font-size:11px;font-family:inherit"></button>';
         h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:13px;font-weight:600">Price Chart</div><div style="display:flex;gap:4px" onclick="event.stopPropagation()">'+['1M','6M','1Y'].map(function(p){return'<button class="period-btn'+(period===p?' active':'')+'" onclick="event.stopPropagation();setStockPeriod(\''+s.sym+'\',\''+p+'\')">'+p+'</button>'}).join('')+'</div></div>';
         h+='<canvas id="stock-chart-'+s.sym+'" style="width:100%;height:180px"></canvas>';
         h+='<canvas id="stock-vol-'+s.sym+'" style="width:100%;height:36px;margin-top:2px"></canvas>';
@@ -178,7 +203,7 @@ function renderInvestments(){
     html+='<div style="border-radius:13px;background:var(--bg2);border:1px solid var(--bd);overflow:hidden"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--bd)">'+['Fund','Ticker','NAV','YTD','Exp',''].map(function(h){return'<th style="padding:11px 16px;text-align:left;font-size:10px;color:var(--t3)">'+h+'</th>'}).join('')+'</tr></thead><tbody>';
     FUNDS.forEach(function(f){
       var isExp=state.expandedFund===f.tick;var period=state.fundPeriod[f.tick]||'1M';
-      html+='<tr class="fund-row'+(isExp?' expanded':'')+'" onclick="toggleFund(\''+f.tick+'\')"><td style="padding:13px 16px;font-size:12px;font-weight:500">'+f.name+'</td><td class="mono" style="padding:13px 16px;color:var(--blue)">'+f.tick+'</td><td class="mono" style="padding:13px 16px">$'+f.nav.toFixed(2)+'</td><td style="padding:13px 16px;color:var(--green);font-weight:600">+'+f.ytd+'%</td><td style="padding:13px 16px;color:var(--t3)">'+f.exp+'%</td><td style="padding:13px 16px;color:var(--t3);font-size:10px"><span class="expand-icon" style="display:inline-block;transition:transform .3s;'+(isExp?'transform:rotate(180deg)':'')+'">▼</span></td></tr>';
+      html+='<tr class="fund-row'+(isExp?' expanded':'')+'" onclick="toggleFund(\''+f.tick+'\')"><td style="padding:13px 16px;font-size:12px;font-weight:500">'+f.name+'</td><td class="mono" style="padding:13px 16px;color:var(--blue)">'+f.tick+'</td><td class="mono" style="padding:13px 16px">$'+f.nav.toFixed(2)+'</td><td style="padding:13px 16px;color:var(--green);font-weight:600">+'+f.ytd+'%</td><td style="padding:13px 16px;color:var(--t3)">'+f.exp+'%</td><td style="padding:13px 16px;color:var(--t3);font-size:10px"><span class="expand-icon" style="display:inline-block;transition:transform .3s;'+(isExp?'transform:rotate(180deg)':'')+'">â–¼</span></td></tr>';
       html+='<tr><td colspan="6" style="padding:0"><div style="max-height:'+(isExp?'400px':'0')+';overflow:hidden;transition:max-height .4s ease,opacity .3s;opacity:'+(isExp?'1':'0')+'">';
       if(isExp){
         html+='<div style="padding:16px 20px;background:var(--bg3);border-top:1px solid var(--bd)">';
@@ -199,12 +224,13 @@ function renderInvestments(){
     html+='<div class="grid gf">'+BONDS.map(function(b){
       var isExp=state.expandedBond===b.name;var period=state.bondPeriod[b.name]||'1M';
       var h='<div class="card bond-card'+(isExp?' expanded':'')+'" onclick="toggleBond(\''+b.name+'\')">';
-      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px"><div style="font-size:13px;font-weight:600">'+b.name+'</div><span class="expand-icon" style="font-size:10px;color:var(--t3);transition:transform .3s;'+(isExp?'transform:rotate(180deg)':'')+'">▼</span></div>';
+      h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px"><div style="font-size:13px;font-weight:600">'+b.name+'</div><span class="expand-icon" style="font-size:10px;color:var(--t3);transition:transform .3s;'+(isExp?'transform:rotate(180deg)':'')+'">â–¼</span></div>';
       h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:4px"><div><div style="font-size:9px;color:var(--t3);text-transform:uppercase">Yield</div><div class="mono" style="font-size:17px;font-weight:600;color:var(--green)">'+b.yld+'%</div></div><div><div style="font-size:9px;color:var(--t3);text-transform:uppercase">Price</div><div class="mono" style="font-size:17px;font-weight:600">$'+b.price+'</div></div></div>';
-      h+='<div style="display:flex;gap:8px;font-size:10px;color:var(--t3)"><span class="badge" style="background:var(--green-g);color:var(--green)">'+b.rat+'</span><span>'+(b.chg>=0?'▲':'▼')+' '+Math.abs(b.chg).toFixed(2)+'</span></div>';
+      h+='<div style="display:flex;gap:8px;font-size:10px;color:var(--t3)"><span class="badge" style="background:var(--green-g);color:var(--green)">'+b.rat+'</span><span>'+(b.chg>=0?'â–²':'â–¼')+' '+Math.abs(b.chg).toFixed(2)+'</span></div>';
       h+='<div style="max-height:'+(isExp?'500px':'0')+';overflow:hidden;transition:max-height .4s ease;opacity:'+(isExp?'1':'0')+';transition:max-height .4s,opacity .3s">';
       if(isExp){
         h+='<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:10px">';
+        // h+='<button onclick="collapseBond(\''+b.name+'\',event)" style="position:absolute;top:-8px;right:0;padding:6px 12px;border-radius:6px;border:1px solid var(--bd);background:var(--bg3);color:var(--t2);cursor:pointer;font-size:11px;font-family:inherit"></button>';
         h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:12px;font-weight:600">Yield Trend</div><div style="display:flex;gap:4px" onclick="event.stopPropagation()">'+['1M','6M','1Y'].map(function(p){return'<button class="period-btn'+(period===p?' active':'')+'" onclick="event.stopPropagation();setBondPeriod(\''+b.name+'\',\''+p+'\')">'+p+'</button>'}).join('')+'</div></div>';
         h+='<canvas id="bond-chart-'+b.name.replace(/[^a-zA-Z0-9]/g,'')+'" style="width:100%;height:140px"></canvas>';
         h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">'+[{l:'Coupon',v:b.coupon+'%'},{l:'Maturity',v:b.maturity},{l:'Duration',v:b.duration+'y'},{l:'Rating',v:b.rat}].map(function(x){return'<div class="stat-pill"><div style="font-size:8px;color:var(--t3);text-transform:uppercase;margin-bottom:3px">'+x.l+'</div><div class="mono" style="font-size:11px;font-weight:600">'+x.v+'</div></div>'}).join('')+'</div>';
