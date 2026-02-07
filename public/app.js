@@ -42,12 +42,18 @@ let state={
   orchestratorStep: 0,
   showOrchestrator: false,
   creditCommandData: null,
+  showAutomationModal: false, 
+  showFeaturesModal: false,
 };
+
+// Export globals for automations.js
+window.state = state;
 
 let apiKey=localStorage.getItem('visionfi_api_key')||'';
 
 // ========== UTILITIES ==========
 const fmt=v=>{const n=Math.abs(v);return(v<0?'-':'')+'$'+n.toFixed(n%1===0?0:2).replace(/\B(?=(\d{3})+(?!\d))/g,',')};
+window.fmt = fmt;  // ADD THIS LINE
 
 async function api(m,p,b){
   const o={method:m,headers:{'Content-Type':'application/json'}};
@@ -57,6 +63,7 @@ async function api(m,p,b){
   if(!r.ok)throw new Error(d.error||'Failed');
   return d;
 }
+window.api = api;  // ADD THIS LINE
 
 async function loadDashboard(uid){
   state.loading=true;render();
@@ -85,6 +92,7 @@ function showToast(m,t){
   document.body.appendChild(e);
   setTimeout(()=>e.remove(),3000);
 }
+window.showToast = showToast;  // ADD THIS LINE
 
 function set(u){
   var isChatChange=u.chatOpen!==undefined||u.chatPhase!==undefined||u.chatMessages!==undefined;
@@ -175,13 +183,13 @@ function renderSidebar(){
   var u=state.currentUser;if(!u)return'';
   var tabs=[
     {id:'dashboard',l:'Dashboard',i:'📊'},
-    {id:'subscriptions',l:'Subscriptions',i:'💳'},  // ADD THIS LINE
+    {id:'subscriptions',l:'Subscriptions',i:'🔄'},
     {id:'credit',l:'Credit & Loans',i:'💳'},
     {id:'investments',l:'Investments',i:'📈'},
     {id:'insights',l:'Insights',i:'💡'},
     {id:'predictions',l:'Predictions',i:'🔮'}
   ];
-  return'<div class="sidebar" style="width:240px;min-height:100vh;background:var(--bg1);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:16px 10px;position:fixed;left:0;top:0;z-index:50"><div style="display:flex;align-items:center;gap:8;padding:7px 11px;margin-bottom:26px"><div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:14px;font-weight:700;color:#fff">V</div><span style="font-size:16px;font-weight:700">VisionFi</span></div><div style="flex:1;display:flex;flex-direction:column;gap:2px">'+tabs.map(function(t){return'<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:9;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(state.tab===t.id?'var(--blue-g)':'transparent')+';color:'+(state.tab===t.id?'var(--blue)':'var(--t2)')+';font-size:13px;font-weight:'+(state.tab===t.id?600:400)+';font-family:inherit"><span>'+t.i+'</span>'+t.l+'</button>'}).join('')+'</div><div style="position:relative"><div id="user-menu" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:5px;background:var(--bg3);border:1px solid var(--bd2);border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'+state.users.map(function(usr){return'<button onclick="switchUser(\''+usr.id+'\')" style="display:flex;align-items:center;gap:8;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:'+(usr.id===u.id?'var(--blue-g)':'transparent')+';color:var(--t1);font-size:11px;text-align:left;font-family:inherit"><span style="font-size:17px">'+usr.avatar+'</span><div><div style="font-weight:500">'+usr.name+'</div><div style="font-size:9px;color:var(--t3)">'+(usr.tier==='premium'?'★ Premium':'Free')+'</div></div></button>'}).join('')+'<div style="height:1px;background:var(--bd);margin:4px 0"></div><button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:7;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:transparent;color:var(--red);font-size:11px;text-align:left;font-family:inherit">🚪 Sign Out</button></div><button onclick="var m=document.getElementById(\'user-menu\');m.style.display=m.style.display===\'block\'?\'none\':\'block\'" style="display:flex;align-items:center;gap:8;padding:9px;border-radius:10px;border:1px solid var(--bd);cursor:pointer;width:100%;background:var(--bg2);color:var(--t1);text-align:left;font-family:inherit"><span style="font-size:20px">'+u.avatar+'</span><div style="flex:1"><div style="font-size:11px;font-weight:600">'+u.name+'</div><div style="font-size:9px;color:var(--t3)">'+(u.tier==='premium'?'★ Premium':'Free')+'</div></div><span style="color:var(--t3)">▾</span></button></div></div>';
+  return'<div class="sidebar" style="width:240px;min-height:100vh;background:var(--bg1);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:16px 10px;position:fixed;left:0;top:0;z-index:50"><div style="display:flex;align-items:center;gap:8;padding:7px 11px;margin-bottom:26px"><div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:14px;font-weight:700;color:#fff">V</div><span style="font-size:16px;font-weight:700">VisionFi</span></div><div style="flex:1;display:flex;flex-direction:column;gap:2px">'+tabs.map(function(t){return'<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:9;padding:10px 12px;border-radius:8px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(state.tab===t.id?'var(--blue-g)':'transparent')+';color:'+(state.tab===t.id?'var(--blue)':'var(--t2)')+';font-size:13px;font-weight:'+(state.tab===t.id?600:400)+';font-family:inherit"><span>'+t.i+'</span>'+t.l+'</button>'}).join('')+'</div><div style="position:relative"><div id="user-menu" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:5px;background:var(--bg3);border:1px solid var(--bd2);border-radius:11px;padding:5px;box-shadow:0 8px 32px rgba(0,0,0,.5)">'+state.users.map(function(usr){return'<button onclick="switchUser(\''+usr.id+'\')" style="display:flex;align-items:center;gap:8;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:'+(usr.id===u.id?'var(--blue-g)':'transparent')+';color:var(--t1);font-size:11px;text-align:left;font-family:inherit"><span style="font-size:17px">'+usr.avatar+'</span><div><div style="font-weight:500">'+usr.name+'</div><div style="font-size:9px;color:var(--t3)">'+(usr.tier==='premium'?'★ Premium':'Free')+'</div></div></button>'}).join('')+'<div style="height:1px;background:var(--bd);margin:4px 0"></div><button onclick="set({showFeaturesModal:true});document.getElementById(\'user-menu\').style.display=\'none\'" style="display:flex;align-items:center;gap:7;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:transparent;color:var(--blue);font-size:11px;text-align:left;font-family:inherit">⚙️ Smart Features</button><button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:7;padding:8px 9px;border-radius:6px;border:none;cursor:pointer;width:100%;background:transparent;color:var(--red);font-size:11px;text-align:left;font-family:inherit">🚪 Sign Out</button></div><button onclick="var m=document.getElementById(\'user-menu\');m.style.display=m.style.display===\'block\'?\'none\':\'block\'" style="display:flex;align-items:center;gap:8;padding:9px;border-radius:10px;border:1px solid var(--bd);cursor:pointer;width:100%;background:var(--bg2);color:var(--t1);text-align:left;font-family:inherit"><span style="font-size:20px">'+u.avatar+'</span><div style="flex:1"><div style="font-size:11px;font-weight:600">'+u.name+'</div><div style="font-size:9px;color:var(--t3)">'+(u.tier==='premium'?'★ Premium':'Free')+'</div></div><span style="color:var(--t3)">▾</span></button></div></div>';
 }
 
 // ========== DAILY BRIEFING (Floating Collapsible) ==========
@@ -664,7 +672,7 @@ function render(){
       (state.tab==='investments'?renderInvestments():'')+
       (state.tab==='insights'?renderInsights():'')+
       (state.tab==='predictions'?renderPredictions():'')+
-    '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal();
+     '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal()+(typeof renderFeaturesModal==='function'?renderFeaturesModal():'');
   }
   
   root.innerHTML=html;
@@ -813,6 +821,7 @@ window.switchUser=function(id){
 };
 
 // ========== INIT ==========
+window.render = render;  // ADD THIS LINE
 render();
 window.addEventListener('resize',function(){render()});
 

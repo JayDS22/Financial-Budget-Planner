@@ -43,6 +43,39 @@ async function initDB() {
     UNIQUE(user_id, goal, question_key)
   )`);
 
+    // ===== SMART AUTOMATIONS TABLES =====
+  db.run(`CREATE TABLE automation_rules (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    type TEXT,
+    name TEXT,
+    description TEXT,
+    config TEXT,
+    status TEXT DEFAULT 'active',
+    total_saved REAL DEFAULT 0,
+    execution_count INT DEFAULT 0,
+    last_executed TEXT,
+    created_at TEXT
+  )`);
+
+  db.run(`CREATE TABLE automation_executions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    rule_id TEXT,
+    type TEXT,
+    description TEXT,
+    amount REAL,
+    trigger_data TEXT,
+    timestamp TEXT
+  )`);
+
+  db.run(`CREATE TABLE savings_vault (
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    balance REAL DEFAULT 0,
+    last_updated TEXT
+  )`);
+
   // 3 Users
   const users = [
     ['u1','Alex Chen','alex@cmu.edu','demo123','👨‍💻',7500,'USD','premium','Financial Independence'],
@@ -141,6 +174,36 @@ async function initDB() {
     ['u3','cc9','Wegmans',-198.40,'2026-02-05','Groceries','🛒'],['u3','cc9','Home Depot',-345.00,'2026-02-03','Home','🔨'],
   ];
   for (const s of ccs) db.run(`INSERT INTO credit_spending VALUES(?,?,?,?,?,?,?,?)`, [uuidv4(),...s]);
+
+  // ===== SEED SAMPLE AUTOMATIONS FOR DEMO =====
+  const sampleAutomations = [
+    ['auto1', 'u1', 'round_up', 'Round-Up Savings', 'Round up purchases to nearest $5', '{"value":5}', 'active', 127.45, 34, '2026-02-07T10:30:00Z', '2026-01-15T00:00:00Z'],
+    ['auto2', 'u1', 'under_budget', 'Under-Budget Sweep', 'Save 50% of daily under-budget amount', '{"value":50}', 'active', 89.20, 12, '2026-02-06T23:59:00Z', '2026-01-20T00:00:00Z'],
+    ['auto3', 'u2', 'round_up', 'Round-Up Savings', 'Round up purchases to nearest $1', '{"value":1}', 'active', 45.67, 52, '2026-02-07T09:15:00Z', '2026-01-10T00:00:00Z'],
+    ['auto4', 'u2', 'subscription_guard', 'Subscription Guard', 'Alert on unused subscriptions after 14 days', '{"value":14}', 'active', 0, 3, '2026-02-05T12:00:00Z', '2026-01-25T00:00:00Z'],
+    ['auto5', 'u3', 'savings_goal', 'Daily Savings Target', 'Auto-save $20 daily toward debt freedom', '{"value":20}', 'active', 560.00, 28, '2026-02-07T06:00:00Z', '2026-01-10T00:00:00Z'],
+    ['auto6', 'u3', 'spending_limit', 'Dining Budget Guard', 'Alert at 80% of dining budget', '{"value":80,"category":"Food & Dining"}', 'active', 0, 5, '2026-02-04T18:30:00Z', '2026-01-18T00:00:00Z'],
+  ];
+  for (const a of sampleAutomations) {
+    db.run(`INSERT INTO automation_rules VALUES(?,?,?,?,?,?,?,?,?,?,?)`, a);
+  }
+
+  const sampleExecutions = [
+    ['exec1', 'u1', 'auto1', 'round_up', 'Round-up: Starbucks $6.75 -> $10', 3.25, '{"merchant":"Starbucks","original":6.75}', '2026-02-07T10:30:00Z'],
+    ['exec2', 'u1', 'auto1', 'round_up', 'Round-up: Uber $24.50 -> $25', 0.50, '{"merchant":"Uber","original":24.50}', '2026-02-07T08:15:00Z'],
+    ['exec3', 'u1', 'auto2', 'under_budget', 'Under-budget sweep: Saved $12.50', 12.50, '{"dailyBudget":150,"spent":125}', '2026-02-06T23:59:00Z'],
+    ['exec4', 'u2', 'auto3', 'round_up', 'Round-up: Target $94.20 -> $95', 0.80, '{"merchant":"Target","original":94.20}', '2026-02-07T09:15:00Z'],
+    ['exec5', 'u2', 'auto4', 'subscription_guard', 'Alert: Gym unused for 35 days - $49.99/mo', 0, '{"subscription":"Gym","daysSinceUse":35}', '2026-02-05T12:00:00Z'],
+    ['exec6', 'u3', 'auto5', 'savings_goal', 'Daily savings: $20 auto-transferred', 20.00, '{"goal":"Debt Freedom"}', '2026-02-07T06:00:00Z'],
+    ['exec7', 'u3', 'auto6', 'spending_limit', 'Alert: Food & Dining at 85% of budget', 0, '{"category":"Food & Dining","percentage":85}', '2026-02-04T18:30:00Z'],
+  ];
+  for (const e of sampleExecutions) {
+    db.run(`INSERT INTO automation_executions VALUES(?,?,?,?,?,?,?,?)`, e);
+  }
+
+  db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, ['sv1', 'u1', 216.65, '2026-02-07T10:30:00Z']);
+  db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, ['sv2', 'u2', 45.67, '2026-02-07T09:15:00Z']);
+  db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, ['sv3', 'u3', 560.00, '2026-02-07T06:00:00Z']);
 
   console.log('✅ Database ready: 3 users, credit reports, cards, loans, EMIs, agent memory');
 }
@@ -1729,6 +1792,279 @@ ${FORMATTING_RULES}`;
     res.status(500).json({ error: e.message });
   }
 }
+
+// ========== SMART AUTOMATIONS API ==========
+
+// GET /api/automations/:userId - Get all automations and recent executions
+app.get('/api/automations/:userId', (req, res) => {
+  const uid = req.params.userId;
+  
+  const rules = query(`SELECT * FROM automation_rules WHERE user_id=? ORDER BY created_at DESC`, [uid]);
+  const executions = query(`SELECT * FROM automation_executions WHERE user_id=? ORDER BY timestamp DESC LIMIT 20`, [uid]);
+  const vault = query(`SELECT * FROM savings_vault WHERE user_id=?`, [uid]);
+  
+  const totalSaved = rules.reduce((sum, r) => sum + (r.total_saved || 0), 0);
+  
+  res.json({
+    rules: rules.map(r => ({
+      ...r,
+      config: r.config ? JSON.parse(r.config) : {}
+    })),
+    recentExecutions: executions.map(e => ({
+      ...e,
+      trigger_data: e.trigger_data ? JSON.parse(e.trigger_data) : {}
+    })),
+    totalSaved,
+    vaultBalance: vault[0]?.balance || 0
+  });
+});
+
+// POST /api/automations - Create new automation rule
+app.post('/api/automations', (req, res) => {
+  const { userId, type, config } = req.body;
+  
+  if (!userId || !type) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  
+  const typeDescriptions = {
+    'round_up': 'Round up purchases to nearest $' + (config?.value || 1),
+    'under_budget': 'Save ' + (config?.value || 50) + '% of daily under-budget amount',
+    'bill_reminder': 'Alert ' + (config?.value || 3) + ' days before bills',
+    'subscription_guard': 'Alert on unused subscriptions after ' + (config?.value || 14) + ' days',
+    'spending_limit': 'Alert at ' + (config?.value || 80) + '% of category budget',
+    'savings_goal': 'Auto-save $' + (config?.value || 10) + ' daily'
+  };
+  
+  const id = uuidv4();
+  const now = new Date().toISOString();
+  
+  db.run(`INSERT INTO automation_rules VALUES(?,?,?,?,?,?,?,?,?,?,?)`, [
+    id,
+    userId,
+    type,
+    config?.name || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    typeDescriptions[type] || 'Custom automation',
+    JSON.stringify(config || {}),
+    'active',
+    0,
+    0,
+    null,
+    now
+  ]);
+  
+  const automation = query(`SELECT * FROM automation_rules WHERE id=?`, [id])[0];
+  
+  res.json({
+    success: true,
+    automation: {
+      ...automation,
+      config: config || {}
+    }
+  });
+});
+
+// POST /api/automations/toggle - Toggle automation on/off
+app.post('/api/automations/toggle', (req, res) => {
+  const { automationId } = req.body;
+  
+  const rule = query(`SELECT * FROM automation_rules WHERE id=?`, [automationId]);
+  if (!rule.length) {
+    return res.status(404).json({ error: 'Automation not found' });
+  }
+  
+  const newStatus = rule[0].status === 'active' ? 'paused' : 'active';
+  db.run(`UPDATE automation_rules SET status=? WHERE id=?`, [newStatus, automationId]);
+  
+  res.json({ success: true, newStatus });
+});
+
+// DELETE /api/automations/:id - Delete automation rule
+app.delete('/api/automations/:id', (req, res) => {
+  const id = req.params.id;
+  
+  db.run(`DELETE FROM automation_rules WHERE id=?`, [id]);
+  db.run(`DELETE FROM automation_executions WHERE rule_id=?`, [id]);
+  
+  res.json({ success: true });
+});
+
+// POST /api/automations/execute - Execute pending automations
+app.post('/api/automations/execute', (req, res) => {
+  const { userId } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID required' });
+  }
+  
+  const rules = query(`SELECT * FROM automation_rules WHERE user_id=? AND status='active'`, [userId]);
+  const transactions = query(`SELECT * FROM transactions WHERE user_id=? ORDER BY date DESC LIMIT 50`, [userId]);
+  const budgets = query(`SELECT * FROM budgets WHERE user_id=?`, [userId]);
+  const user = query(`SELECT * FROM users WHERE id=?`, [userId])[0];
+  
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  
+  const executions = [];
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  
+  for (const rule of rules) {
+    const config = rule.config ? JSON.parse(rule.config) : {};
+    let execution = null;
+    
+    switch (rule.type) {
+      case 'round_up': {
+        const recentTx = transactions.filter(tx => {
+          const txDate = new Date(tx.date);
+          const hoursSince = (now - txDate) / (1000 * 60 * 60);
+          return tx.amount < 0 && hoursSince < 24;
+        });
+        
+        if (recentTx.length > 0 && Math.random() > 0.5) {
+          const tx = recentTx[Math.floor(Math.random() * recentTx.length)];
+          const absAmount = Math.abs(tx.amount);
+          const roundTo = config.value || 1;
+          const roundedUp = Math.ceil(absAmount / roundTo) * roundTo;
+          const savings = roundedUp - absAmount;
+          
+          if (savings > 0 && savings < roundTo) {
+            execution = {
+              type: 'round_up',
+              description: 'Round-up: ' + tx.name + ' $' + absAmount.toFixed(2) + ' -> $' + roundedUp.toFixed(2),
+              amount: Math.round(savings * 100) / 100,
+              trigger_data: { merchant: tx.name, original: absAmount, rounded: roundedUp }
+            };
+          }
+        }
+        break;
+      }
+      
+      case 'under_budget': {
+        const dailyBudget = (user.income * 0.7) / 30;
+        const todaySpent = transactions
+          .filter(tx => tx.date === today && tx.amount < 0)
+          .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+        
+        if (todaySpent < dailyBudget && Math.random() > 0.7) {
+          const underBy = dailyBudget - todaySpent;
+          const savePercent = (config.value || 50) / 100;
+          const toSave = underBy * savePercent;
+          
+          execution = {
+            type: 'under_budget',
+            description: 'Under-budget sweep: Saved $' + toSave.toFixed(2),
+            amount: Math.round(toSave * 100) / 100,
+            trigger_data: { dailyBudget: Math.round(dailyBudget), spent: Math.round(todaySpent) }
+          };
+        }
+        break;
+      }
+      
+      case 'subscription_guard': {
+        const unusedDays = config.value || 14;
+        const usageData = { 'Netflix': 21, 'Spotify': 0, 'Gym': 35, 'Adobe CC': 14, 'NYT': 45, 'Hulu': 20 };
+        const subscriptions = query(`SELECT * FROM subscriptions WHERE user_id=?`, [userId]);
+        
+        for (const sub of subscriptions) {
+          const daysSinceUse = usageData[sub.name] || Math.floor(Math.random() * 40);
+          if (daysSinceUse > unusedDays && Math.random() > 0.8) {
+            execution = {
+              type: 'subscription_guard',
+              description: 'Alert: ' + sub.name + ' unused for ' + daysSinceUse + ' days - $' + sub.amount.toFixed(2) + '/mo',
+              amount: 0,
+              trigger_data: { subscription: sub.name, daysSinceUse, monthlyCost: sub.amount }
+            };
+            break;
+          }
+        }
+        break;
+      }
+      
+      case 'spending_limit': {
+        const category = config.category || 'Food & Dining';
+        const threshold = config.value || 80;
+        
+        const budget = budgets.find(b => b.category === category);
+        if (budget) {
+          const spent = transactions
+            .filter(tx => tx.category === category && tx.amount < 0)
+            .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+          
+          const percentage = (spent / budget.budget_amount) * 100;
+          
+          if (percentage >= threshold && Math.random() > 0.7) {
+            execution = {
+              type: 'spending_limit',
+              description: 'Alert: ' + category + ' at ' + Math.round(percentage) + '% of budget',
+              amount: 0,
+              trigger_data: { category, percentage: Math.round(percentage) }
+            };
+          }
+        }
+        break;
+      }
+      
+      case 'savings_goal': {
+        const dailyAmount = config.value || 10;
+        const lastExec = rule.last_executed ? new Date(rule.last_executed) : null;
+        const lastExecDate = lastExec ? lastExec.toISOString().split('T')[0] : null;
+        
+        if (lastExecDate !== today && Math.random() > 0.6) {
+          execution = {
+            type: 'savings_goal',
+            description: 'Daily savings: $' + dailyAmount.toFixed(2) + ' auto-transferred',
+            amount: dailyAmount,
+            trigger_data: { goal: user.goal, dailyAmount }
+          };
+        }
+        break;
+      }
+    }
+    
+    if (execution) {
+      const execId = uuidv4();
+      const timestamp = now.toISOString();
+      
+      db.run(`INSERT INTO automation_executions VALUES(?,?,?,?,?,?,?,?)`, [
+        execId, userId, rule.id, execution.type, execution.description,
+        execution.amount, JSON.stringify(execution.trigger_data), timestamp
+      ]);
+      
+      db.run(`UPDATE automation_rules SET total_saved = total_saved + ?, execution_count = execution_count + 1, last_executed = ? WHERE id = ?`,
+        [execution.amount, timestamp, rule.id]);
+      
+      if (execution.amount > 0) {
+        const vault = query(`SELECT * FROM savings_vault WHERE user_id=?`, [userId]);
+        if (vault.length > 0) {
+          db.run(`UPDATE savings_vault SET balance = balance + ?, last_updated = ? WHERE user_id = ?`,
+            [execution.amount, timestamp, userId]);
+        } else {
+          db.run(`INSERT INTO savings_vault VALUES(?,?,?,?)`, [uuidv4(), userId, execution.amount, timestamp]);
+        }
+      }
+      
+      executions.push({ id: execId, ...execution, timestamp });
+    }
+  }
+  
+  const updatedRules = query(`SELECT SUM(total_saved) as total FROM automation_rules WHERE user_id=?`, [userId]);
+  const totalSaved = updatedRules[0]?.total || 0;
+  
+  res.json({ success: true, executions, totalSaved, rulesChecked: rules.length });
+});
+
+// GET /api/automations/vault/:userId - Get savings vault balance
+app.get('/api/automations/vault/:userId', (req, res) => {
+  const uid = req.params.userId;
+  const vault = query(`SELECT * FROM savings_vault WHERE user_id=?`, [uid]);
+  res.json({ balance: vault[0]?.balance || 0, lastUpdated: vault[0]?.last_updated || null });
+});
+
+// ============================================================================
+// END OF AUTOMATIONS ADDITIONS
+// ============================================================================
 
 app.get('/{*splat}', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
