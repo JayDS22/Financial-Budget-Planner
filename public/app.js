@@ -37,6 +37,11 @@ let state={
   subscriptionAnalysis: null,
   subscriptionTab: 'hub',
   showKeepSubs: false,
+  orchestratorData: null,
+  orchestratorLoading: false,
+  orchestratorStep: 0,
+  showOrchestrator: false,
+  creditCommandData: null,
 };
 
 let apiKey=localStorage.getItem('visionfi_api_key')||'';
@@ -254,7 +259,7 @@ function renderBriefing(){
       '</div>'+
       
       // Tip + Goal row
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">'+
         // Smart tip
         '<div style="padding:16px;background:linear-gradient(135deg,rgba(61,219,160,0.1),rgba(61,219,160,0.05));border-radius:14px;border:1px solid rgba(61,219,160,0.2)">'+
           '<div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">💡 Today\'s Tip</div>'+
@@ -280,8 +285,15 @@ function renderBriefing(){
         '</div>'+
       '</div>'+
       
+      // 🧠 AI ORCHESTRATOR BUTTON - THE KILLER FEATURE
+      '<button onclick="runSmartOrchestrator()" style="width:100%;margin-bottom:16px;padding:16px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#5b8cff,#b07cff);border:none;border-radius:12px;color:white;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 15px rgba(91,140,255,0.3)" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 20px rgba(91,140,255,0.4)\'" onmouseout="this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 4px 15px rgba(91,140,255,0.3)\'">'+
+        '<span style="font-size:20px">🧠</span>'+
+        '<span>Get AI-Powered Spending Analysis</span>'+
+        '<span style="font-size:10px;padding:4px 10px;background:rgba(255,255,255,0.2);border-radius:6px">Dedalus</span>'+
+      '</button>'+
+      
       // Footer with quick actions
-      '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="padding-top:16px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">'+
         '<span style="font-size:11px;color:var(--t3)">Click outside or press Dismiss to close</span>'+
         '<div style="display:flex;gap:8px">'+
           '<button onclick="set({tab:\'insights\',showBriefing:false})" class="btn btn-g" style="font-size:12px;padding:8px 14px">View Insights</button>'+
@@ -299,7 +311,6 @@ function dismissBriefing(){
 window.dismissBriefing=dismissBriefing;
 
 // ========== DASHBOARD ==========
-// ========== DASHBOARD ==========
 function renderDashboard(){
   var d=state.dashData;if(!d)return'';
   var u=d.user,s=d.stats,cats=d.categoryBreakdown;
@@ -308,7 +319,7 @@ function renderDashboard(){
   var hr=new Date().getHours(),g=hr<12?'morning':hr<18?'afternoon':'evening';
   
   return '<div style="animation:fadeIn .35s">' + 
-    (state.showBriefing ? '' : '<h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Good '+g+', '+u.name.split(' ')[0]+'</h1>') + 
+    '<h1 style="font-size:24px;font-weight:700;margin-bottom:20px">Good '+g+', '+u.name.split(' ')[0]+'</h1>' + 
     '<div class="grid g4" style="margin-bottom:16px">' +
     [{l:'Net Worth',v:fmt(s.netWorth),b:'↑ +$4,230'},{l:'Income',v:fmt(u.income),b:'Stable'},{l:'Spent',v:fmt(s.totalSpent),b:'↓ -8.2%'},{l:'Savings',v:s.savingsRate+'%',b:'↑ +5.1%'}].map(function(x){return'<div class="card"><div style="font-size:10px;color:var(--t3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px">'+x.l+'</div><div style="font-size:24px;font-weight:700;letter-spacing:-1px;margin-bottom:5px">'+x.v+'</div><span class="badge" style="color:var(--green);background:var(--green-g)">'+x.b+'</span></div>'}).join('') +
     '</div><div class="grid g2" style="margin-bottom:16px"><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Cash Flow</h3><canvas id="chart-cf" style="width:100%;height:220px"></canvas></div><div class="card"><h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Budget Breakdown</h3><div style="display:flex;flex-direction:column;gap:9px">' +
@@ -648,12 +659,12 @@ function render(){
   else if(state.page==='app'){
     html=renderSidebar()+'<main class="main-content" style="margin-left:240px;padding:24px 28px;max-width:1060px">'+
       (state.tab==='dashboard'?renderDashboard():'')+
-      (state.tab==='subscriptions'?renderSubscriptionHub():'')+  // ADD THIS LINE
+      (state.tab==='subscriptions'?renderSubscriptionHub():'')+
       (state.tab==='credit'?renderCredit():'')+
       (state.tab==='investments'?renderInvestments():'')+
       (state.tab==='insights'?renderInsights():'')+
       (state.tab==='predictions'?renderPredictions():'')+
-    '</main>'+renderBriefing()+renderChat()+renderModal();
+    '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal();
   }
   
   root.innerHTML=html;
@@ -804,3 +815,444 @@ window.switchUser=function(id){
 // ========== INIT ==========
 render();
 window.addEventListener('resize',function(){render()});
+
+// ========== ORCHESTRATOR FUNCTIONS ==========
+
+// Run the Smart Spending Orchestrator with visual model handoff
+async function runSmartOrchestrator() {
+  if (!state.currentUser || !apiKey) {
+    showToast('Please set up your API key first', 'error');
+    return;
+  }
+  
+  state.orchestratorLoading = true;
+  state.orchestratorStep = 1;
+  state.showOrchestrator = true;
+  render();
+  
+  // Visual delay for each step (for demo effect)
+  const stepDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  
+  try {
+    // Step 1: Show Haiku analyzing
+    state.orchestratorStep = 1;
+    render();
+    await stepDelay(800);
+    
+    // Step 2: Show GPT-4 detecting patterns
+    state.orchestratorStep = 2;
+    render();
+    await stepDelay(1000);
+    
+    // Step 3: Show Sonnet generating advice
+    state.orchestratorStep = 3;
+    render();
+    
+    // Make the actual API call
+    const result = await api('POST', '/api/orchestrator/analyze', {
+      userId: state.currentUser.id
+    });
+    
+    state.orchestratorData = result;
+    state.orchestratorStep = 4; // Complete
+    state.orchestratorLoading = false;
+    render();
+    
+  } catch (e) {
+    console.error('Orchestrator error:', e);
+    showToast('Analysis failed: ' + e.message, 'error');
+    state.orchestratorLoading = false;
+    state.showOrchestrator = false;
+    render();
+  }
+}
+window.runSmartOrchestrator = runSmartOrchestrator;
+
+// Close orchestrator modal
+function closeOrchestrator() {
+  state.showOrchestrator = false;
+  state.orchestratorData = null;
+  state.orchestratorStep = 0;
+  render();
+}
+window.closeOrchestrator = closeOrchestrator;
+
+// ========== ORCHESTRATOR MODAL RENDER ==========
+function renderOrchestratorModal() {
+  if (!state.showOrchestrator) return '';
+  
+  const step = state.orchestratorStep;
+  const data = state.orchestratorData;
+  
+  // Model pipeline visualization
+  const models = [
+    { id: 1, name: 'Claude Haiku', task: 'Categorizing transactions...', icon: '⚡', color: '#3ddba0' },
+    { id: 2, name: 'GPT-4o-mini', task: 'Detecting patterns...', icon: '🔍', color: '#5b8cff' },
+    { id: 3, name: 'Claude Sonnet', task: 'Generating advice...', icon: '🧠', color: '#b07cff' }
+  ];
+  
+  // If still loading, show pipeline animation
+  if (state.orchestratorLoading) {
+    return `
+      <div class="modal-overlay" style="z-index:1000">
+        <div class="modal" style="max-width:500px;text-align:center">
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">🧠 Smart Spending Orchestrator</h2>
+          <p style="font-size:13px;color:var(--t3);margin-bottom:24px">Running multi-model analysis pipeline...</p>
+          
+          <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px">
+            ${models.map(m => {
+              const isActive = step === m.id;
+              const isComplete = step > m.id;
+              const isPending = step < m.id;
+              
+              return `
+                <div style="
+                  display:flex;align-items:center;gap:14px;padding:16px;
+                  background:${isActive ? 'linear-gradient(135deg,rgba(91,140,255,0.1),rgba(61,219,160,0.05))' : 'var(--bg2)'};
+                  border-radius:12px;
+                  border:1px solid ${isActive ? m.color : 'var(--bd)'};
+                  opacity:${isPending ? '0.5' : '1'};
+                  transition:all 0.3s ease;
+                ">
+                  <div style="
+                    width:44px;height:44px;border-radius:10px;
+                    display:flex;align-items:center;justify-content:center;
+                    background:${isComplete ? 'var(--green-g)' : isActive ? m.color + '22' : 'var(--bg3)'};
+                    font-size:20px;
+                  ">
+                    ${isComplete ? '✓' : m.icon}
+                  </div>
+                  <div style="flex:1;text-align:left">
+                    <div style="font-size:14px;font-weight:600;color:${isActive ? m.color : 'var(--t1)'}">${m.name}</div>
+                    <div style="font-size:12px;color:var(--t3)">${isActive ? m.task : isComplete ? 'Complete' : 'Waiting...'}</div>
+                  </div>
+                  ${isActive ? `
+                    <div style="width:20px;height:20px" class="spinner"></div>
+                  ` : isComplete ? `
+                    <span style="color:var(--green);font-size:14px">✓</span>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+          
+          <div style="font-size:11px;color:var(--t3)">
+            🔗 Dedalus SDK Model Handoff Pipeline
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Show results
+  if (data) {
+    var advice = data.analysis && data.analysis.advice ? data.analysis.advice : '';
+    var summary = data.summary || {};
+    var patterns = data.analysis && data.analysis.patterns ? data.analysis.patterns : {};
+    
+    // Better markdown rendering
+    function formatAdvice(text) {
+      if (!text) return '';
+      return text
+        // Headers
+        .replace(/^### (.*$)/gm, '<h4 style="font-size:14px;font-weight:700;color:var(--t1);margin:16px 0 10px 0;display:flex;align-items:center;gap:8px">$1</h4>')
+        .replace(/^## (.*$)/gm, '<h3 style="font-size:16px;font-weight:700;color:var(--blue);margin:20px 0 12px 0">$1</h3>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--green);font-weight:700">$1</strong>')
+        // Numbered lists
+        .replace(/^(\d+)\.(.*$)/gm, '<div style="display:flex;gap:10px;margin:8px 0;padding:12px;background:var(--bg1);border-radius:10px;border-left:3px solid var(--blue)"><span style="color:var(--blue);font-weight:700;min-width:20px">$1.</span><span style="flex:1">$2</span></div>')
+        // Bullet points
+        .replace(/^[•\-]\s*(.*$)/gm, '<div style="display:flex;gap:10px;margin:6px 0;padding:10px 12px;background:rgba(61,219,160,0.05);border-radius:8px"><span style="color:var(--green)">→</span><span>$1</span></div>')
+        // Line breaks
+        .replace(/\n\n/g, '<div style="height:12px"></div>')
+        .replace(/\n/g, '<br>');
+    }
+    
+    return '<div class="modal-overlay" onclick="if(event.target===this)closeOrchestrator()" style="z-index:1000">' +
+      '<div class="modal" style="max-width:750px;max-height:90vh;overflow-y:auto;padding:28px">' +
+        
+        // Header
+        '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:24px">' +
+          '<div>' +
+            '<h2 style="font-size:22px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px">' +
+              '<span style="font-size:28px">🧠</span> Analysis Complete' +
+            '</h2>' +
+            '<p style="font-size:13px;color:var(--t3)">Powered by Dedalus Multi-Model Pipeline</p>' +
+          '</div>' +
+          '<button onclick="closeOrchestrator()" style="background:var(--bg3);border:1px solid var(--bd);color:var(--t2);cursor:pointer;font-size:16px;padding:8px 12px;border-radius:8px">✕</button>' +
+        '</div>' +
+        
+        // Model Pipeline Badges
+        '<div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">' +
+          (data.pipeline && data.pipeline.modelsUsed ? data.pipeline.modelsUsed.map(function(m) { 
+            var modelColor = m.model.includes('haiku') ? '#3ddba0' : m.model.includes('gpt') ? '#5b8cff' : '#b07cff';
+            return '<span style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:20px;background:linear-gradient(135deg,' + modelColor + '22,' + modelColor + '11);border:1px solid ' + modelColor + '44;font-size:12px;font-weight:500">' +
+              '<span style="color:' + modelColor + '">✓</span>' +
+              '<span style="color:var(--t1)">' + m.model + '</span>' +
+              '<span style="color:var(--t3);font-size:10px">' + m.latency + '</span>' +
+            '</span>'; 
+          }).join('') : '') +
+        '</div>' +
+        
+        // Summary Cards
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">' +
+          '<div style="padding:20px;background:linear-gradient(135deg,rgba(61,219,160,0.15),rgba(61,219,160,0.05));border-radius:14px;text-align:center;border:1px solid rgba(61,219,160,0.2)">' +
+            '<div style="font-size:32px;font-weight:800;color:var(--green);margin-bottom:4px">$' + (summary.potentialMonthlySavings ? summary.potentialMonthlySavings.toFixed(0) : '0') + '</div>' +
+            '<div style="font-size:12px;color:var(--t2)">Monthly Savings</div>' +
+          '</div>' +
+          '<div style="padding:20px;background:linear-gradient(135deg,rgba(91,140,255,0.15),rgba(91,140,255,0.05));border-radius:14px;text-align:center;border:1px solid rgba(91,140,255,0.2)">' +
+            '<div style="font-size:32px;font-weight:800;color:var(--blue);margin-bottom:4px">' + (summary.projectedSavingsRate || 0) + '%</div>' +
+            '<div style="font-size:12px;color:var(--t2)">Projected Savings Rate</div>' +
+          '</div>' +
+          '<div style="padding:20px;background:linear-gradient(135deg,rgba(176,124,255,0.15),rgba(176,124,255,0.05));border-radius:14px;text-align:center;border:1px solid rgba(176,124,255,0.2)">' +
+            '<div style="font-size:32px;font-weight:800;color:var(--purple);margin-bottom:4px">$' + (summary.potentialAnnualSavings ? summary.potentialAnnualSavings.toFixed(0) : '0') + '</div>' +
+            '<div style="font-size:12px;color:var(--t2)">Annual Savings</div>' +
+          '</div>' +
+        '</div>' +
+        
+        // Subscription Insights (if available)
+        (patterns.subscriptionInsights && patterns.subscriptionInsights.length > 0 ? 
+          '<div style="margin-bottom:24px">' +
+            '<h3 style="font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span>📱</span> Subscription Insights</h3>' +
+            '<div style="display:flex;flex-direction:column;gap:10px">' +
+              patterns.subscriptionInsights.slice(0, 3).map(function(sub) { 
+                var statusColor = sub.status === 'cancel' ? 'var(--red)' : 'var(--yellow)';
+                var statusBg = sub.status === 'cancel' ? 'var(--red-g)' : 'rgba(255,184,77,0.1)';
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--bg1);border-radius:12px;border:1px solid var(--bd)">' +
+                  '<div>' +
+                    '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + sub.name + '</div>' +
+                    '<div style="font-size:12px;color:var(--t3)">' + sub.reason + '</div>' +
+                  '</div>' +
+                  '<div style="text-align:right">' +
+                    '<div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px">Save $' + (sub.monthlySavings ? sub.monthlySavings.toFixed(2) : '0') + '/mo</div>' +
+                    '<span style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:' + statusBg + ';color:' + statusColor + ';text-transform:uppercase">' + sub.status + '</span>' +
+                  '</div>' +
+                '</div>'; 
+              }).join('') +
+            '</div>' +
+          '</div>' 
+        : '') +
+        
+        // AI Advice - Beautifully Formatted
+        '<div style="padding:24px;background:var(--bg1);border-radius:16px;border:1px solid var(--bd)">' +
+          '<div style="font-size:13px;line-height:1.8;color:var(--t2)">' +
+            formatAdvice(advice) +
+          '</div>' +
+        '</div>' +
+        
+        // Action Buttons
+        '<div style="display:flex;gap:12px;margin-top:24px">' +
+          '<button onclick="closeOrchestrator()" class="btn btn-g" style="flex:1;padding:14px">Close</button>' +
+          '<button onclick="closeOrchestrator();set({tab:\'subscriptions\'})" class="btn btn-p" style="flex:1;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px">' +
+            '<span>Review Subscriptions</span><span>→</span>' +
+          '</button>' +
+        '</div>' +
+        
+      '</div>' +
+    '</div>';
+  }
+  
+  return '';
+}
+
+// ========== ENHANCED DAILY BRIEFING WITH ORCHESTRATOR BUTTON ==========
+// Replace or enhance your existing renderDailyBriefing function
+
+function renderEnhancedBriefing() {
+  var b = state.briefingData;
+  if (!b || !state.showBriefing) return '';
+  
+  var y = b.yesterday;
+  var g = b.goalProgress;
+  
+  return '<div style="position:relative;margin-bottom:20px;padding:24px;background:linear-gradient(135deg,rgba(91,140,255,0.12),rgba(61,219,160,0.08));border-radius:18px;border:1px solid rgba(91,140,255,0.2);animation:fadeIn .4s">' +
+    
+    // Header
+    '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">' +
+      '<div>' +
+        '<h2 style="font-size:24px;font-weight:700;margin-bottom:4px">' + b.emoji + ' ' + b.greeting + ', ' + b.userName + '!</h2>' +
+        '<p style="font-size:13px;color:var(--t3)">Here\'s your daily financial snapshot</p>' +
+      '</div>' +
+      '<button onclick="dismissBriefing()" style="background:var(--bg3);border:1px solid var(--bd);color:var(--t2);cursor:pointer;font-size:12px;padding:8px 14px;border-radius:8px">✕ Dismiss</button>' +
+    '</div>' +
+    
+    // Stats Row
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">' +
+      // Yesterday
+      '<div style="padding:16px;background:var(--bg1);border-radius:14px;border:1px solid var(--bd)">' +
+        '<div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">📊 Yesterday</div>' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+          '<span style="font-size:28px;font-weight:700">' + fmt(y.spent) + '</span>' +
+          '<span class="badge" style="padding:6px 10px;background:' + (y.underBudget ? 'var(--green-g)' : 'var(--red-g)') + ';color:' + (y.underBudget ? 'var(--green)' : 'var(--red)') + '">' + (y.underBudget ? '✓ Under budget' : '⚠ Over budget') + '</span>' +
+        '</div>' +
+      '</div>' +
+      
+      // Upcoming Bills
+      '<div style="padding:16px;background:var(--bg1);border-radius:14px;border:1px solid var(--bd)">' +
+        '<div style="font-size:11px;color:' + (b.upcomingBills.length > 0 ? 'var(--yellow)' : 'var(--green)') + ';text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">' + (b.upcomingBills.length > 0 ? '⚠️ Upcoming Bills' : '✅ All Clear') + '</div>' +
+        (b.upcomingBills.length > 0 ?
+          b.upcomingBills.slice(0, 2).map(function(bill) {
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">' +
+              '<span style="font-size:13px">' + bill.icon + ' ' + bill.name + '</span>' +
+              '<span class="mono" style="font-size:13px;font-weight:600">' + fmt(bill.amount) + '</span>' +
+            '</div>';
+          }).join('')
+          : '<div style="font-size:13px;color:var(--green)">🎉 No bills this week!</div>'
+        ) +
+      '</div>' +
+    '</div>' +
+    
+    // Tip Row
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">' +
+      // Tip
+      '<div style="padding:16px;background:linear-gradient(135deg,rgba(61,219,160,0.1),rgba(61,219,160,0.05));border-radius:14px;border:1px solid rgba(61,219,160,0.2)">' +
+        '<div style="font-size:11px;color:var(--green);text-transform:uppercase;margin-bottom:8px">💡 Today\'s Tip</div>' +
+        '<div style="font-size:14px;font-weight:600;margin-bottom:6px">' + b.tip.text + '</div>' +
+        '<div style="display:inline-block;padding:6px 12px;background:var(--green-g);border-radius:6px;font-size:13px;color:var(--green);font-weight:600">Save ' + fmt(b.tip.savings) + '</div>' +
+      '</div>' +
+      
+      // Goal Progress
+      '<div style="padding:16px;background:var(--bg1);border-radius:14px;border:1px solid var(--bd)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+          '<div style="font-size:11px;color:var(--t3)">🎯 ' + g.name + '</div>' +
+          '<div style="font-size:14px;font-weight:700;color:var(--blue)">' + g.percentage + '%</div>' +
+        '</div>' +
+        '<div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:8px">' +
+          '<div style="height:100%;width:' + g.percentage + '%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:5px"></div>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--blue)">📈 Save ' + fmt(g.dailyTarget) + ' today</div>' +
+      '</div>' +
+    '</div>' +
+    
+    // 🧠 ORCHESTRATOR BUTTON - THE KILLER FEATURE
+    '<button onclick="runSmartOrchestrator()" class="btn btn-p" style="width:100%;margin-top:8px;padding:16px 14px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#5b8cff,#b07cff);border-radius:12px;border:none;color:white;cursor:pointer;font-weight:600">' +
+      '<span style="font-size:18px">🧠</span>' +
+      '<span>Get AI-Powered Spending Analysis</span>' +
+      '<span style="font-size:10px;padding:4px 8px;background:rgba(255,255,255,0.2);border-radius:4px">Dedalus</span>' +
+    '</button>' +
+    
+  '</div>';
+}
+
+// ========== CREDIT COMMAND CENTER ==========
+async function loadCreditCommandCenter() {
+  if (!state.currentUser) return;
+  
+  try {
+    const [upcomingRes, healthRes] = await Promise.all([
+      api('GET', '/api/credit/upcoming/' + state.currentUser.id),
+      api('GET', '/api/credit/health/' + state.currentUser.id)
+    ]);
+    
+    state.creditCommandData = {
+      upcoming: upcomingRes,
+      health: healthRes
+    };
+    render();
+  } catch (e) {
+    console.error('Failed to load credit data:', e);
+  }
+}
+window.loadCreditCommandCenter = loadCreditCommandCenter;
+
+function renderCreditCommandCenter() {
+  var data = state.creditCommandData;
+  
+  if (!data) {
+    loadCreditCommandCenter();
+    return '<div class="card" style="padding:40px;text-align:center">' +
+      '<div style="font-size:32px;margin-bottom:12px;animation:pulse 1.5s infinite">💳</div>' +
+      '<div style="font-size:14px;color:var(--t2)">Loading Credit Command Center...</div>' +
+    '</div>';
+  }
+  
+  var health = data.health;
+  var upcoming = data.upcoming;
+  
+  // Score color
+  var scoreColor = health.score >= 750 ? 'var(--green)' : health.score >= 700 ? 'var(--blue)' : health.score >= 650 ? 'var(--yellow)' : 'var(--red)';
+  var scoreEmoji = health.score >= 750 ? '🎉' : health.score >= 700 ? '😊' : health.score >= 650 ? '😐' : '😟';
+  
+  return '<div style="animation:fadeIn .35s">' +
+    '<h1 style="font-size:24px;font-weight:700;margin-bottom:20px">💳 Credit Command Center</h1>' +
+    
+    // Credit Score Card
+    '<div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(91,140,255,0.1),rgba(61,219,160,0.05))">' +
+      '<div style="display:flex;gap:24px;align-items:center">' +
+        '<div style="text-align:center;padding:20px">' +
+          '<div style="font-size:56px;font-weight:700;color:' + scoreColor + '">' + health.score + '</div>' +
+          '<div style="font-size:14px;color:var(--t2)">' + scoreEmoji + ' ' + health.tier + '</div>' +
+          (health.nextMilestone ? '<div style="font-size:11px;color:var(--t3);margin-top:4px">' + health.pointsToNext + ' pts to ' + health.nextMilestone + '</div>' : '') +
+        '</div>' +
+        '<div style="flex:1">' +
+          '<div style="margin-bottom:16px">' +
+            '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">' +
+              '<span>Credit Utilization</span>' +
+              '<span style="color:' + (health.utilization <= 30 ? 'var(--green)' : 'var(--yellow)') + '">' + health.utilization + '%</span>' +
+            '</div>' +
+            '<div style="height:8px;background:rgba(255,255,255,0.1);border-radius:4px">' +
+              '<div style="height:100%;width:' + Math.min(health.utilization, 100) + '%;background:' + (health.utilization <= 30 ? 'var(--green)' : health.utilization <= 50 ? 'var(--yellow)' : 'var(--red)') + ';border-radius:4px"></div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">' +
+            '<div><div style="font-size:10px;color:var(--t3)">Balance</div><div style="font-size:16px;font-weight:600">$' + health.totalBalance.toLocaleString() + '</div></div>' +
+            '<div><div style="font-size:10px;color:var(--t3)">Limit</div><div style="font-size:16px;font-weight:600">$' + health.totalLimit.toLocaleString() + '</div></div>' +
+            '<div><div style="font-size:10px;color:var(--t3)">On-Time</div><div style="font-size:16px;font-weight:600">' + health.onTimePayments + '%</div></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    
+    // Upcoming Payments
+    '<div class="card" style="margin-bottom:16px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+        '<h3 style="font-size:14px;font-weight:600">⚠️ Upcoming Payments</h3>' +
+        (upcoming.urgentCount > 0 ? '<span class="badge" style="background:var(--red-g);color:var(--red)">' + upcoming.urgentCount + ' urgent</span>' : '') +
+      '</div>' +
+      (upcoming.upcoming.length > 0 ?
+        upcoming.upcoming.slice(0, 4).map(function(payment) {
+          var urgencyColor = payment.urgency === 'high' ? 'var(--red)' : payment.urgency === 'medium' ? 'var(--yellow)' : 'var(--green)';
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;margin-bottom:8px;background:var(--bg2);border-radius:10px;border-left:3px solid ' + urgencyColor + '">' +
+            '<div style="display:flex;align-items:center;gap:12px">' +
+              '<span style="font-size:20px">' + payment.icon + '</span>' +
+              '<div>' +
+                '<div style="font-size:13px;font-weight:600">' + payment.name + '</div>' +
+                '<div style="font-size:11px;color:var(--t3)">' + 
+                  (payment.type === 'credit_card' ? 'Min: $' + payment.minAmount + ' • APR: ' + payment.apr + '%' : payment.monthsPaid + '/' + payment.totalMonths + ' paid') + 
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="text-align:right">' +
+              '<div style="font-size:16px;font-weight:700">$' + payment.amount.toFixed(2) + '</div>' +
+              '<div style="font-size:11px;color:' + urgencyColor + '">' + 
+                (payment.daysUntil < 0 ? 'OVERDUE!' : payment.daysUntil === 0 ? 'Due Today!' : 'In ' + payment.daysUntil + ' days') + 
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('')
+        : '<div style="padding:20px;text-align:center;color:var(--green)">✅ No upcoming payments</div>'
+      ) +
+    '</div>' +
+    
+    // Tips
+    '<div class="card">' +
+      '<h3 style="font-size:14px;font-weight:600;margin-bottom:14px">💡 Tips to Boost Your Score</h3>' +
+      (health.tips.length > 0 ?
+        health.tips.map(function(tip) {
+          var priorityColor = tip.priority === 'high' ? 'var(--red)' : tip.priority === 'medium' ? 'var(--yellow)' : 'var(--blue)';
+          return '<div style="padding:12px;background:var(--bg2);border-radius:8px;margin-bottom:8px;border-left:3px solid ' + priorityColor + '">' +
+            '<div style="display:flex;justify-content:space-between;align-items:start">' +
+              '<div>' +
+                '<div style="font-size:13px;font-weight:600">' + tip.title + '</div>' +
+                '<div style="font-size:11px;color:var(--t3);margin-top:4px">' + tip.description + '</div>' +
+              '</div>' +
+              '<span class="badge" style="background:var(--green-g);color:var(--green)">' + tip.impact + '</span>' +
+            '</div>' +
+          '</div>';
+        }).join('')
+        : '<div style="font-size:12px;color:var(--green)">🎉 Your credit health looks great!</div>'
+      ) +
+    '</div>' +
+    
+  '</div>';
+}

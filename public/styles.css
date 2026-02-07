@@ -447,3 +447,37 @@ input,select,button,textarea{font-family:inherit}input:focus,select:focus,textar
 .briefing-card button:hover {
   color: var(--t1);
 }
+
+/* Spinner for orchestrator loading */
+.spinner {
+  border: 2px solid var(--bg3);
+  border-top: 2px solid var(--blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced modal styling */
+.modal {
+  animation: modalSlide 0.3s ease-out;
+}
+
+@keyframes modalSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Temporary: hide duplicate briefing modal */
+.modal-overlay:has([onclick*="dismissBriefing"]) {
+  display: none !important;
+}
