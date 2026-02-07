@@ -240,7 +240,8 @@ function renderSidebar(){
     {id:'subscriptions',l:'Subscriptions',i:'📱'},
     {id:'credit',l:'Credit & Loans',i:'💳'},
     {id:'investments',l:'Investments',i:'📈'},
-    {id:'insights&predictions',l:'Insights & Predictions',i:'💡'}
+    {id:'insights&predictions',l:'Insights & Predictions',i:'💡'},
+    {id:'learn',l:'Learn',i:'📖'}  // ← NEW LINE ADDED
   ];
   
   var stats = (typeof getSmartFeatureStats === 'function') ? getSmartFeatureStats() : {activeCount: 0, totalSaved: 0};
@@ -828,7 +829,7 @@ function render(){
       (state.tab==='credit'?renderCredit():'')+
       (state.tab==='investments'?renderInvestments():'')+
       (state.tab==='insights&predictions'?renderInsights()+'<div style="height: 40px;"></div>'+renderPredictions():'')+
-      (state.tab==='automations'?(typeof renderAutomationsTab==='function'?renderAutomationsTab():''):'')+
+      (state.tab==='learn'?(typeof renderLearnHub==='function'?renderLearnHub():''):'')+
       '</main>'+renderBriefing()+renderChat()+renderModal()+renderOrchestratorModal()+(typeof renderAutomationModal==='function'?renderAutomationModal():'')+(typeof renderSmartFeaturesPanel==='function'?renderSmartFeaturesPanel():'');
   }
   
