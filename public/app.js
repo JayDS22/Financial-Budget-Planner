@@ -194,95 +194,80 @@ function renderSidebar(){
   var activeCount = stats.activeCount;
   var totalSaved = stats.totalSaved;
   
-  return '<div class="sidebar" style="width:260px;min-height:100vh;background:linear-gradient(180deg,#0a0a18 0%,#080814 100%);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:50">' +
-    '<div style="padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.04)">' +
+  return '<div class="sidebar" style="width:260px;min-height:100vh;background:linear-gradient(180deg,#F7F8FC 0%,#EEF1F8 100%);border-right:1px solid rgba(26,31,113,0.1);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:50">' +
+    '<div style="padding:20px 16px;border-bottom:1px solid rgba(26,31,113,0.08)">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">' +
-        '<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#5b8cff,#b07cff);font-size:16px;font-weight:700;color:#fff">V</div>' +
-        '<span style="font-size:18px;font-weight:700">VisionFi</span>' +
+        '<div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1A1F71,#2E348F);font-size:16px;font-weight:700;color:#fff">V</div>' +
+        '<span style="font-size:18px;font-weight:700;color:#1A1F71">VisionFi</span>' +
       '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">' +
-        '<span style="font-size:10px;color:rgba(255,255,255,0.5)">Powered by</span>' +
+      '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#FFFFFF;border-radius:8px;border:1px solid rgba(26,31,113,0.1);box-shadow:0 2px 8px rgba(26,31,113,0.06)">' +
+        '<span style="font-size:10px;color:#4A5090;font-weight:500">Powered by</span>' +
         '<img src="icons/Visa.svg" alt="Visa" style="height:16px" onerror="this.style.display=\'none\'" />' +
       '</div>' +
     '</div>' +
     '<div style="flex:1;padding:16px 12px;overflow-y:auto">' +
-      '<div style="font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:10px">Menu</div>' +
+      '<div style="font-size:10px;color:#7A80B0;text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:10px;font-weight:600">Menu</div>' +
       '<div style="display:flex;flex-direction:column;gap:2px">' +
         tabs.map(function(t){
           var isActive = state.tab===t.id;
-          return '<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(isActive?'rgba(91,140,255,0.12)':'transparent')+';color:'+(isActive?'var(--blue)':'rgba(255,255,255,0.55)')+';font-size:13px;font-weight:'+(isActive?600:400)+';font-family:inherit;transition:all 0.15s">' +
+          return '<button onclick="set({tab:\''+t.id+'\'})" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:none;cursor:pointer;width:100%;text-align:left;background:'+(isActive?'rgba(26,31,113,0.1)':'transparent')+';color:'+(isActive?'#1A1F71':'#4A5090')+';font-size:13px;font-weight:'+(isActive?600:500)+';font-family:inherit;transition:all 0.15s">' +
             '<span style="font-size:15px">'+t.i+'</span>'+t.l +
           '</button>';
         }).join('') +
       '</div>' +
     '</div>' +
-    '<div style="border-top:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2)">' +
+    '<div style="border-top:1px solid rgba(26,31,113,0.08);background:rgba(26,31,113,0.03)">' +
       '<div style="padding:12px 12px 8px">' +
-        '<button onclick="openSmartFeaturesPanel()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(61,219,160,0.12),rgba(91,140,255,0.08));border:1px solid rgba(61,219,160,0.25);border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;color:var(--t1);font-family:inherit;transition:all 0.2s">' +
-          '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(61,219,160,0.2),rgba(91,140,255,0.2));display:flex;align-items:center;justify-content:center;font-size:18px">⚙️</div>' +
+        '<button onclick="openSmartFeaturesPanel()" style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(0,135,90,0.08),rgba(26,31,113,0.06));border:1px solid rgba(0,135,90,0.2);border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;color:#1A1F71;font-family:inherit;transition:all 0.2s">' +
+          '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(0,135,90,0.15),rgba(26,31,113,0.1));display:flex;align-items:center;justify-content:center;font-size:18px">⚙️</div>' +
           '<div style="flex:1;text-align:left">' +
-            '<div style="font-size:13px;font-weight:600">Smart Features</div>' +
-            '<div data-smart-stats style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">' +
-              '<span style="color:var(--green)">' + activeCount + ' active</span>' +
-              '<span style="margin:0 6px">•</span>' +
-              '<span style="color:var(--green);font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
+            '<div style="font-size:13px;font-weight:600;color:#1A1F71">Smart Features</div>' +
+            '<div style="font-size:11px;color:#7A80B0;margin-top:2px">' +
+              '<span style="color:#00875A;font-weight:600">' + activeCount + ' active</span>' +
+              '<span style="margin:0 6px;color:#7A80B0">•</span>' +
+              '<span style="color:#00875A;font-weight:600">$' + totalSaved.toFixed(2) + ' saved</span>' +
             '</div>' +
           '</div>' +
-          '<span style="color:rgba(255,255,255,0.4);font-size:16px">›</span>' +
-                  '</button>' +
-                '</div>' +
-                
-                // Daily Briefing Button (only show if dismissed)
-                (!state.showBriefing && state.briefingData ? 
-                  '<div style="padding:0 12px 8px">' +
-                    '<button onclick="set({showBriefing:true})" style="width:100%;padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:10px;color:var(--t2);font-family:inherit;transition:all 0.2s">' +
-                      '<span style="font-size:16px">📊</span>' +
-                      '<span style="font-size:12px">Show Daily Briefing</span>' +
-                    '</button>' +
-                  '</div>'
-                  : ''
-                ) +
-                
-                // Profile Section
+          '<span style="color:#7A80B0;font-size:16px">›</span>' +
         '</button>' +
       '</div>' +
       '<div style="padding:8px 12px 16px;position:relative">' +
-        '<div id="profile-menu" style="display:none;position:absolute;bottom:100%;left:12px;right:12px;margin-bottom:8px;background:#14142a;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,0.5);z-index:100;animation:fadeIn 0.2s">' +
-          '<div style="padding:14px 12px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:6px">' +
-            '<div style="font-size:15px;font-weight:600">'+u.name+'</div>' +
-            '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">'+(u.email||'user@example.com')+'</div>' +
+        '<div id="profile-menu" style="display:none;position:absolute;bottom:100%;left:12px;right:12px;margin-bottom:8px;background:#FFFFFF;border:1px solid rgba(26,31,113,0.12);border-radius:14px;padding:6px;box-shadow:0 12px 40px rgba(26,31,113,0.15);z-index:100;animation:fadeIn 0.2s">' +
+          '<div style="padding:14px 12px;border-bottom:1px solid rgba(26,31,113,0.08);margin-bottom:6px">' +
+            '<div style="font-size:15px;font-weight:600;color:#1A1F71">'+u.name+'</div>' +
+            '<div style="font-size:11px;color:#7A80B0;margin-top:2px">'+(u.email||'user@example.com')+'</div>' +
             (u.tier==='premium' ? 
-              '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(255,184,77,0.15);border-radius:6px;font-size:10px;color:#ffb84d;font-weight:600"><span>★</span> Premium Member</div>' 
-              : '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:6px;font-size:10px;color:var(--t3)">Free Plan</div>'
+              '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(247,182,0,0.15);border-radius:6px;font-size:10px;color:#E5A800;font-weight:600"><span>★</span> Premium Member</div>' 
+              : '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:rgba(26,31,113,0.06);border-radius:6px;font-size:10px;color:#7A80B0">Free Plan</div>'
             ) +
           '</div>' +
-          '<button onclick="showToast(\'Profile coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>👤</span> My Profile</button>' +
-          '<button onclick="showToast(\'Settings coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>⚙️</span> Settings</button>' +
-          '<button onclick="showToast(\'Notifications coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>🔔</span> Notifications</button>' +
-          '<button onclick="showToast(\'Help coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:rgba(255,255,255,0.7);font-family:inherit;font-size:13px;text-align:left"><span>❓</span> Help & Support</button>' +
-          '<div style="height:1px;background:rgba(255,255,255,0.06);margin:6px 0"></div>' +
+          '<button onclick="showToast(\'Profile coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>👤</span> My Profile</button>' +
+          '<button onclick="showToast(\'Settings coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>⚙️</span> Settings</button>' +
+          '<button onclick="showToast(\'Notifications coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>🔔</span> Notifications</button>' +
+          '<button onclick="showToast(\'Help coming soon!\',\'success\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:transparent;border:none;border-radius:8px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:13px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'"><span>❓</span> Help & Support</button>' +
+          '<div style="height:1px;background:rgba(26,31,113,0.08);margin:6px 0"></div>' +
           (state.users.length > 1 ? 
             '<div style="padding:6px 8px;margin-bottom:4px">' +
-              '<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:6px;padding-left:4px">SWITCH ACCOUNT</div>' +
+              '<div style="font-size:10px;color:#7A80B0;margin-bottom:6px;padding-left:4px;font-weight:600">SWITCH ACCOUNT</div>' +
               state.users.filter(function(usr){return usr.id !== u.id}).map(function(usr){
-                return '<button onclick="switchUser(\''+usr.id+'\');toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;padding:8px;width:100%;background:transparent;border:none;border-radius:6px;cursor:pointer;color:var(--t2);font-family:inherit;font-size:12px;text-align:left">' +
+                return '<button onclick="switchUser(\''+usr.id+'\');toggleProfileMenu()" style="display:flex;align-items:center;gap:8px;padding:8px;width:100%;background:transparent;border:none;border-radius:6px;cursor:pointer;color:#4A5090;font-family:inherit;font-size:12px;text-align:left;transition:background 0.15s" onmouseover="this.style.background=\'rgba(26,31,113,0.06)\'" onmouseout="this.style.background=\'transparent\'">' +
                   '<span style="font-size:16px">'+usr.avatar+'</span>' +
                   '<span>'+usr.name+'</span>' +
                 '</button>';
               }).join('') +
             '</div>' +
-            '<div style="height:1px;background:rgba(255,255,255,0.06);margin:6px 0"></div>'
+            '<div style="height:1px;background:rgba(26,31,113,0.08);margin:6px 0"></div>'
             : ''
           ) +
-          '<button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:rgba(255,107,107,0.1);border:none;border-radius:8px;cursor:pointer;color:#ff6b6b;font-family:inherit;font-size:13px;text-align:left;font-weight:500"><span>🚪</span> Sign Out</button>' +
+          '<button onclick="set({page:\'landing\',currentUser:null})" style="display:flex;align-items:center;gap:10px;padding:10px 12px;width:100%;background:rgba(222,53,11,0.08);border:none;border-radius:8px;cursor:pointer;color:#DE350B;font-family:inherit;font-size:13px;text-align:left;font-weight:500;transition:background 0.15s" onmouseover="this.style.background=\'rgba(222,53,11,0.12)\'" onmouseout="this.style.background=\'rgba(222,53,11,0.08)\'"><span>🚪</span> Sign Out</button>' +
         '</div>' +
-        '<button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;width:100%;background:transparent;color:var(--t1);text-align:left;font-family:inherit;transition:all 0.15s">' +
-          '<div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#5b8cff,#b07cff);display:flex;align-items:center;justify-content:center;font-size:18px">'+u.avatar+'</div>' +
+        '<button onclick="toggleProfileMenu()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(26,31,113,0.1);cursor:pointer;width:100%;background:#FFFFFF;color:#1A1F71;text-align:left;font-family:inherit;transition:all 0.15s;box-shadow:0 2px 8px rgba(26,31,113,0.06)">' +
+          '<div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#1A1F71,#2E348F);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff">'+u.avatar+'</div>' +
           '<div style="flex:1">' +
-            '<div style="font-size:13px;font-weight:600">'+u.name+'</div>' +
-            '<div style="font-size:10px;color:rgba(255,255,255,0.4)">'+(u.email||'user@example.com')+'</div>' +
+            '<div style="font-size:13px;font-weight:600;color:#1A1F71">'+u.name+'</div>' +
+            '<div style="font-size:10px;color:#7A80B0">'+(u.email||'user@example.com')+'</div>' +
           '</div>' +
-          '<span id="profile-chevron" style="color:rgba(255,255,255,0.4);transition:transform 0.2s;font-size:12px">▾</span>' +
+          '<span id="profile-chevron" style="color:#7A80B0;transition:transform 0.2s;font-size:12px">▾</span>' +
         '</button>' +
       '</div>' +
     '</div>' +
