@@ -1,10 +1,10 @@
 <div align="center">
 
-# 💎 VisionFi
+# VisionFi
 
 ### *Intelligent Budget Planner for the Modern Age*
 
-**🏆 TartanHacks 2026 — Carnegie Mellon University**
+** TartanHacks 2026 — Carnegie Mellon University**
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
@@ -13,7 +13,7 @@
 
 <br/>
 
-[🚀 **Live Demo**](https://visionfi-prod.up.railway.app/) · [📖 Features](#-features) · [⚡ Quick Start](#-quick-start) · [🏗 Architecture](#-architecture) · [🏅 Sponsor Tracks](#-sponsor-tracks--challenges-addressed)
+[ **Live Demo**](https://visionfi-prod.up.railway.app/) · [ Features](#-features) · [ Quick Start](#-quick-start) · [ Architecture](#-architecture) · [ Sponsor Tracks](#-sponsor-tracks--challenges-addressed)
 
 <br/>
 
@@ -25,7 +25,7 @@
 
 <br/>
 
-## 🧠 What is VisionFi?
+## What is VisionFi?
 
 VisionFi is a full-stack AI-powered financial planner that brings together **budgeting, credit management, investment tracking, and personalized insights** into one beautiful dashboard. Built with a Visa-inspired design language, it empowers users to take control of their finances through intelligent automation and goal-oriented AI guidance.
 
@@ -33,31 +33,31 @@ VisionFi is a full-stack AI-powered financial planner that brings together **bud
 
 <br/>
 
-## ✨ Features
+## Features
 
 | | Feature | Description |
 |---|---------|-------------|
-| 📊 | **Dashboard** | Net worth overview, income/expense tracking, transaction management & budget monitoring |
-| 🛒 | **Smart Shopping** | AI-powered shopping planner with deal discovery and card-matched offers |
-| 📱 | **Subscriptions** | Usage analysis, cancellation recommendations & a guard for unused services |
-| 💳 | **Credit & Loans** | Credit score monitoring, card management, loan tracking & spending breakdowns |
-| 📈 | **Investments** | Stock, mutual fund & bond portfolio tracking with historical performance charts |
-| 💡 | **Insights & Predictions** | AI-generated spending insights and cash-flow forecasting |
-| 📖 | **Learn** | Financial literacy hub with gamified courses, quizzes, blogs & daily challenges |
-| 🤖 | **AI Chat Assistant** | Goal-oriented financial advisor powered by Claude with multi-model orchestration |
-| ⚙️ | **Smart Automations** | Round-up savings, under-budget sweeps, bill reminders, spending alerts & more |
+|  | **Dashboard** | Net worth overview, income/expense tracking, transaction management & budget monitoring |
+|  | **Smart Shopping** | AI-powered shopping planner with deal discovery and card-matched offers |
+|  | **Subscriptions** | Usage analysis, cancellation recommendations & a guard for unused services |
+|  | **Credit & Loans** | Credit score monitoring, card management, loan tracking & spending breakdowns |
+|  | **Investments** | Stock, mutual fund & bond portfolio tracking with historical performance charts |
+|  | **Insights & Predictions** | AI-generated spending insights and cash-flow forecasting |
+|  | **Learn** | Financial literacy hub with gamified courses, quizzes, blogs & daily challenges |
+|  | **AI Chat Assistant** | Goal-oriented financial advisor powered by Claude with multi-model orchestration |
+|  | **Smart Automations** | Round-up savings, under-budget sweeps, bill reminders, spending alerts & more |
 
 <br/>
 
 ---
 
-## 🏅 Sponsor Tracks & Challenges Addressed
+## Sponsor Tracks & Challenges Addressed
 
 VisionFi was built to address the challenges posed by **three sponsor tracks** at TartanHacks 2026. Below is how each track's problem statement maps to our solution.
 
 <br/>
 
-### 💳 Visa — *"Reimagine the Future of Payments & Financial Management"*
+### Visa — *"Reimagine the Future of Payments & Financial Management"*
 
 > **Challenge:** Build an innovative solution that improves how consumers manage, track, and optimize their financial lives — leveraging modern payment ecosystems.
 
@@ -72,7 +72,7 @@ VisionFi was built to address the challenges posed by **three sponsor tracks** a
 
 <br/>
 
-### 🏦 Capital One — *"Empower Consumers with Smarter Financial Tools"*
+### Capital One — *"Empower Consumers with Smarter Financial Tools"*
 
 > **Challenge:** Create tools that help consumers make better spending decisions, improve financial literacy, and unlock the most value from their financial products.
 
@@ -86,7 +86,7 @@ VisionFi was built to address the challenges posed by **three sponsor tracks** a
 
 <br/>
 
-### 🧪 Dedalus Labs — *"Best Use of the Dedalus SDK"*
+### Dedalus Labs — *"Best Use of the Dedalus SDK"*
 
 > **Challenge:** Demonstrate creative, impactful use of the Dedalus Labs SDK for multi-model AI orchestration — showing how routing across different LLMs can produce results no single model achieves alone.
 
@@ -104,22 +104,20 @@ VisionFi was built to address the challenges posed by **three sponsor tracks** a
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
-```
-┌─────────────────────────────────────────────┐
-│  Frontend     │  Vanilla JS · CSS (SPA)     │
-│  Backend      │  Node.js · Express 5        │
-│  Database     │  sql.js (in-memory SQLite)   │
-│  AI Engine    │  Anthropic Claude API        │
-│  Routing      │  Dedalus Labs (multi-model)  │
-│  Deployment   │  Railway                     │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    FE[Frontend<br/>Vanilla JS + CSS SPA] --> BE[Backend<br/>Node.js + Express 5]
+    BE --> DB[(sql.js<br/>in-memory SQLite)]
+    BE --> AI[AI Engine<br/>Anthropic Claude API]
+    AI --> ROUTE[Dedalus Labs<br/>multi-model routing]
+    BE --> DEPLOY[Railway deployment]
 ```
 
 <br/>
 
-## ⚡ Quick Start
+## Quick Start
 
 **1 ·** Clone the repo
 
@@ -151,11 +149,11 @@ DEDALUS_API_KEY=your-key-here   # optional — enables multi-model orchestration
 npm start
 ```
 
-**5 ·** Open [**localhost:3000**](http://localhost:3000) and explore 🎉
+**5 ·** Open [**localhost:3000**](http://localhost:3000) and explore 
 
 <br/>
 
-### 🔑 Demo Accounts
+### Demo Accounts
 
 | Email | Password |
 |:------|:---------|
@@ -165,7 +163,7 @@ npm start
 
 <br/>
 
-## 🏗 Architecture
+## Architecture
 
 ```
 VisionFi/
@@ -189,11 +187,11 @@ VisionFi/
 
 <br/>
 
-## 🌐 Deployment
+## Deployment
 
 The app is live on Railway:
 
-> **🔗 [https://visionfi-prod.up.railway.app](https://visionfi-prod.up.railway.app/)**
+> ** [https://visionfi-prod.up.railway.app](https://visionfi-prod.up.railway.app/)**
 
 To deploy your own instance, connect the repo to [Railway](https://railway.app) and add your environment variables (`ANTHROPIC_API_KEY`, optionally `DEDALUS_API_KEY`) in the dashboard.
 
@@ -203,7 +201,7 @@ To deploy your own instance, connect the repo to [Railway](https://railway.app) 
 
 <div align="center">
 
-**Built with ❤️ and ☕ at TartanHacks 2026**
+**Built with and at TartanHacks 2026**
 
 *Carnegie Mellon University · Pittsburgh, PA*
 
